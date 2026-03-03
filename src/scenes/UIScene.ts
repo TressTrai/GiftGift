@@ -29,7 +29,8 @@ export class UIScene extends Phaser.Scene {
   }
 
   private createTabBar(w: number, h: number): void {
-    const barH = 64;
+    const s = w / 390;
+    const barH = Math.round(64 * s);
     const y = h - barH / 2;
 
     // Фон таб-бара
@@ -41,18 +42,23 @@ export class UIScene extends Phaser.Scene {
       { key: 'profile',   icon: 'icon-profile',    label: 'Профиль',   x: w * 0.80 },
     ];
 
+    const iconSize  = Math.round(28 * s);
+    const iconOffY  = Math.round(10 * s);
+    const labelOffY = Math.round(14 * s);
+    const fontSize  = Math.round(11 * s);
+
     tabs.forEach(tab => {
       const isActive = tab.key === this.activeTab;
 
       const icon = this.add
-        .image(tab.x, y - 10, tab.icon)
-        .setDisplaySize(28, 28)
+        .image(tab.x, y - iconOffY, tab.icon)
+        .setDisplaySize(iconSize, iconSize)
         .setInteractive({ useHandCursor: true })
         .setTint(isActive ? COLORS.ACCENT_WARM : COLORS.TEXT_DIM);
 
       const label = this.add
-        .text(tab.x, y + 14, tab.label, {
-          fontSize: '11px',
+        .text(tab.x, y + labelOffY, tab.label, {
+          fontSize: `${fontSize}px`,
           color: isActive ? '#ffb347' : '#888888',
         })
         .setOrigin(0.5);
@@ -64,13 +70,17 @@ export class UIScene extends Phaser.Scene {
     });
 
     // Badge нераскрытых подарков (над иконкой инвентаря)
+    const badgeR    = Math.round(10 * s);
+    const badgeOffX = Math.round(16 * s);
+    const badgeOffY = Math.round(26 * s);
+
     this.badgeBg = this.add
-      .circle(w * 0.50 + 16, y - 26, 10, 0xff4444)
+      .circle(w * 0.50 + badgeOffX, y - badgeOffY, badgeR, 0xff4444)
       .setVisible(false);
 
     this.badgeText = this.add
-      .text(w * 0.50 + 16, y - 26, '0', {
-        fontSize: '11px',
+      .text(w * 0.50 + badgeOffX, y - badgeOffY, '0', {
+        fontSize: `${Math.round(11 * s)}px`,
         color: '#ffffff',
         fontStyle: 'bold',
       })

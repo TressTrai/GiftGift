@@ -16,12 +16,13 @@ export class ProfileScene extends Phaser.Scene {
   create(): void {
     const { width, height } = this.scale;
     const cx = width / 2;
+    const s = width / 390;
 
     this.add.rectangle(0, 0, width, height, COLORS.BG).setOrigin(0);
 
     this.add
-      .text(cx, 20, 'Профиль', {
-        fontSize: '20px',
+      .text(cx, Math.round(20 * s), 'Профиль', {
+        fontSize: `${Math.round(20 * s)}px`,
         fontStyle: 'bold',
         color: '#ffffff',
       })
@@ -29,28 +30,31 @@ export class ProfileScene extends Phaser.Scene {
 
     // Имя игрока
     this.add
-      .text(cx, 100, gameStore.user.name, {
-        fontSize: '24px',
+      .text(cx, Math.round(100 * s), gameStore.user.name, {
+        fontSize: `${Math.round(24 * s)}px`,
         fontStyle: 'bold',
         color: '#ffb347',
       })
       .setOrigin(0.5);
 
-    this.createButton(cx, 160, 'Изменить имя', () => this.openChangeName());
-    this.createButton(cx, 220, 'Изменить пароль', () => this.openChangePassword());
+    this.createButton(cx, Math.round(170 * s), Math.round(260 * s), Math.round(44 * s), s,
+      'Изменить имя', () => this.openChangeName(s));
+    this.createButton(cx, Math.round(240 * s), Math.round(260 * s), Math.round(44 * s), s,
+      'Изменить пароль', () => this.openChangePassword(s));
 
     // Разделитель
-    this.add.line(cx, 264, 0, 0, width - 64, 0, 0x333355).setOrigin(0.5);
+    this.add.line(cx, Math.round(296 * s), 0, 0, width - Math.round(64 * s), 0, 0x333355).setOrigin(0.5);
 
-    this.createButton(cx, 296, 'Как играть', () => {
-      this.scene.start(SCENE_KEYS.TUTORIAL);
-    });
+    this.createButton(cx, Math.round(330 * s), Math.round(260 * s), Math.round(44 * s), s,
+      'Как играть', () => {
+        this.scene.start(SCENE_KEYS.TUTORIAL);
+      });
 
     // Переключатель звука
     const soundOn = isSoundEnabled();
     const soundLabel = this.add
-      .text(cx, 356, `Звуки: ${soundOn ? 'ВКЛ' : 'ВЫКЛ'}`, {
-        fontSize: '16px',
+      .text(cx, Math.round(400 * s), `Звуки: ${soundOn ? 'ВКЛ' : 'ВЫКЛ'}`, {
+        fontSize: `${Math.round(16 * s)}px`,
         color: soundOn ? '#4caf50' : '#888888',
       })
       .setOrigin(0.5)
@@ -64,35 +68,49 @@ export class ProfileScene extends Phaser.Scene {
     });
   }
 
-  private createButton(x: number, y: number, label: string, cb: () => void): void {
+  private createButton(
+    x: number, y: number, w: number, h: number, s: number,
+    label: string, cb: () => void,
+  ): void {
     const bg = this.add
-      .rectangle(x, y, 260, 44, 0x222240)
+      .rectangle(x, y, w, h, 0x222240)
       .setStrokeStyle(1, 0x444466)
       .setInteractive({ useHandCursor: true });
 
-    this.add.text(x, y, label, { fontSize: '16px', color: '#ffffff' }).setOrigin(0.5);
+    this.add.text(x, y, label, {
+      fontSize: `${Math.round(16 * s)}px`,
+      color: '#ffffff',
+    }).setOrigin(0.5);
 
     bg.on('pointerover', () => bg.setFillStyle(0x2a2a50));
     bg.on('pointerout', () => bg.setFillStyle(0x222240));
     bg.on('pointerup', cb);
   }
 
-  private openChangeName(): void {
+  private openChangeName(s: number): void {
+    const formW = Math.round(280 * s);
+    const pad   = Math.round(24 * s);
+    const fnt   = Math.round(16 * s);
+    const bfnt  = Math.round(15 * s);
+
     const dom = this.add.dom(this.scale.width / 2, this.scale.height / 2).createFromHTML(`
-      <div style="background:#1e1e36;padding:24px;border-radius:12px;width:280px;text-align:center">
-        <p style="color:#fff;margin-bottom:12px">Новое имя:</p>
+      <div style="background:#1e1e36;padding:${pad}px;border-radius:${Math.round(12*s)}px;
+                  width:${formW}px;text-align:center">
+        <p style="color:#fff;margin-bottom:${Math.round(12*s)}px;font-size:${fnt}px">Новое имя:</p>
         <input id="nameInput" type="text" maxlength="30"
-          style="width:100%;padding:10px;border-radius:6px;border:none;font-size:16px;
-                 background:#2a2a4e;color:#fff;text-align:center" />
+          style="width:100%;padding:${Math.round(10*s)}px;border-radius:${Math.round(6*s)}px;
+                 border:none;font-size:${fnt}px;background:#2a2a4e;color:#fff;text-align:center;
+                 box-sizing:border-box" />
         <br/><br/>
         <button id="saveBtn"
-          style="background:#7b68ee;color:#fff;border:none;padding:10px 24px;
-                 border-radius:6px;font-size:15px;cursor:pointer">
+          style="background:#7b68ee;color:#fff;border:none;padding:${Math.round(10*s)}px ${Math.round(24*s)}px;
+                 border-radius:${Math.round(6*s)}px;font-size:${bfnt}px;cursor:pointer">
           Сохранить
         </button>
         <button id="cancelBtn"
-          style="background:#333;color:#aaa;border:none;padding:10px 24px;
-                 border-radius:6px;font-size:15px;cursor:pointer;margin-left:8px">
+          style="background:#333;color:#aaa;border:none;padding:${Math.round(10*s)}px ${Math.round(24*s)}px;
+                 border-radius:${Math.round(6*s)}px;font-size:${bfnt}px;cursor:pointer;
+                 margin-left:${Math.round(8*s)}px">
           Отмена
         </button>
       </div>
@@ -114,26 +132,39 @@ export class ProfileScene extends Phaser.Scene {
     });
   }
 
-  private openChangePassword(): void {
+  private openChangePassword(s: number): void {
+    const formW = Math.round(280 * s);
+    const pad   = Math.round(24 * s);
+    const fnt   = Math.round(16 * s);
+    const bfnt  = Math.round(15 * s);
+    const efnt  = Math.round(13 * s);
+
     const dom = this.add.dom(this.scale.width / 2, this.scale.height / 2).createFromHTML(`
-      <div style="background:#1e1e36;padding:24px;border-radius:12px;width:280px;text-align:center">
-        <p style="color:#fff;margin-bottom:8px">Старый пароль:</p>
+      <div style="background:#1e1e36;padding:${pad}px;border-radius:${Math.round(12*s)}px;
+                  width:${formW}px;text-align:center">
+        <p style="color:#fff;margin-bottom:${Math.round(8*s)}px;font-size:${fnt}px">Старый пароль:</p>
         <input id="oldPwd" type="password" maxlength="50"
-          style="width:100%;padding:10px;border-radius:6px;border:none;font-size:16px;
-                 background:#2a2a4e;color:#fff;text-align:center" />
-        <p style="color:#fff;margin:8px 0">Новый пароль (мин. ${PASSWORD_MIN_LENGTH}):</p>
+          style="width:100%;padding:${Math.round(10*s)}px;border-radius:${Math.round(6*s)}px;
+                 border:none;font-size:${fnt}px;background:#2a2a4e;color:#fff;text-align:center;
+                 box-sizing:border-box" />
+        <p style="color:#fff;margin:${Math.round(8*s)}px 0;font-size:${fnt}px">
+          Новый пароль (мин. ${PASSWORD_MIN_LENGTH}):
+        </p>
         <input id="newPwd" type="password" maxlength="50"
-          style="width:100%;padding:10px;border-radius:6px;border:none;font-size:16px;
-                 background:#2a2a4e;color:#fff;text-align:center" />
-        <p id="errMsg" style="color:#ff6b6b;font-size:13px;margin:6px 0;min-height:18px"></p>
+          style="width:100%;padding:${Math.round(10*s)}px;border-radius:${Math.round(6*s)}px;
+                 border:none;font-size:${fnt}px;background:#2a2a4e;color:#fff;text-align:center;
+                 box-sizing:border-box" />
+        <p id="errMsg" style="color:#ff6b6b;font-size:${efnt}px;margin:${Math.round(6*s)}px 0;
+                               min-height:${Math.round(18*s)}px"></p>
         <button id="saveBtn"
-          style="background:#7b68ee;color:#fff;border:none;padding:10px 24px;
-                 border-radius:6px;font-size:15px;cursor:pointer">
+          style="background:#7b68ee;color:#fff;border:none;padding:${Math.round(10*s)}px ${Math.round(24*s)}px;
+                 border-radius:${Math.round(6*s)}px;font-size:${bfnt}px;cursor:pointer">
           Сохранить
         </button>
         <button id="cancelBtn"
-          style="background:#333;color:#aaa;border:none;padding:10px 24px;
-                 border-radius:6px;font-size:15px;cursor:pointer;margin-left:8px">
+          style="background:#333;color:#aaa;border:none;padding:${Math.round(10*s)}px ${Math.round(24*s)}px;
+                 border-radius:${Math.round(6*s)}px;font-size:${bfnt}px;cursor:pointer;
+                 margin-left:${Math.round(8*s)}px">
           Отмена
         </button>
       </div>

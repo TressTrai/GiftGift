@@ -21,20 +21,22 @@ export class RevealScene extends Phaser.Scene {
   create(data: RevealData): void {
     const { width, height } = this.scale;
     const cx = width / 2;
+    const s = width / 390;
 
     // Затемнение
     this.add.rectangle(0, 0, width, height, 0x000000, 0.85).setOrigin(0).setInteractive();
 
     // Коробка с подарком — интерактивная
+    const boxSize = Math.round(130 * s);
     const box = this.add
       .image(cx, height * 0.40, 'wrapped-gift')
-      .setDisplaySize(130, 130)
+      .setDisplaySize(boxSize, boxSize)
       .setInteractive({ useHandCursor: true });
 
     // Idle-анимация: лёгкое покачивание
     this.tweens.add({
       targets: box,
-      y: box.y - 10,
+      y: box.y - Math.round(10 * s),
       duration: 700,
       yoyo: true,
       repeat: -1,
@@ -43,7 +45,7 @@ export class RevealScene extends Phaser.Scene {
 
     const hint = this.add
       .text(cx, height * 0.56, 'Нажми, чтобы открыть!', {
-        fontSize: '17px',
+        fontSize: `${Math.round(17 * s)}px`,
         color: '#ffb347',
       })
       .setOrigin(0.5);
@@ -53,26 +55,33 @@ export class RevealScene extends Phaser.Scene {
       this.tweens.killTweensOf(box);
       hint.destroy();
       box.disableInteractive();
-      this.startReveal(data.instanceId, box, cx, height);
+      this.startReveal(data.instanceId, box, cx, height, s);
     });
 
     // Закрытие по тапу вне коробки
+    const closeDist = Math.round(80 * s);
     this.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
       const d = Phaser.Math.Distance.Between(ptr.x, ptr.y, cx, height * 0.40);
-      if (d > 80) this.scene.stop();
+      if (d > closeDist) this.scene.stop();
     });
   }
 
-  private startReveal(instanceId: string, box: Phaser.GameObjects.Image, cx: number, height: number): void {
+  private startReveal(
+    instanceId: string,
+    box: Phaser.GameObjects.Image,
+    cx: number,
+    height: number,
+    s: number,
+  ): void {
     if (this.cache.audio.exists('sfx-reveal')) this.sound.play('sfx-reveal', { volume: 0.7 });
-    this.createShakeAnimation(box);
+    this.createShakeAnimation(box, s);
 
     revealGift(instanceId)
       .then(revealedItem => {
         gameStore.applyGiftRevealed(instanceId, revealedItem);
 
         this.time.delayedCall(600, () => {
-          this.createBurstEffect(cx, height * 0.40);
+          this.createBurstEffect(cx, height * 0.40, s);
 
           this.tweens.add({
             targets: box,
@@ -82,7 +91,7 @@ export class RevealScene extends Phaser.Scene {
             duration: 300,
             onComplete: () => {
               box.destroy();
-              this.showRevealResult(revealedItem, cx, height);
+              this.showRevealResult(revealedItem, cx, height, s);
             },
           });
         });
@@ -90,27 +99,30 @@ export class RevealScene extends Phaser.Scene {
       .catch(() => this.scene.stop());
   }
 
-  private createShakeAnimation(obj: Phaser.GameObjects.Image): void {
+  private createShakeAnimation(obj: Phaser.GameObjects.Image, s: number): void {
+    const shakeAmt = Math.round(10 * s);
     this.tweens.add({
       targets: obj,
-      x: { from: obj.x - 10, to: obj.x + 10 },
+      x: { from: obj.x - shakeAmt, to: obj.x + shakeAmt },
       duration: 55,
       repeat: 8,
       yoyo: true,
     });
   }
 
-  private createBurstEffect(x: number, y: number): void {
+  private createBurstEffect(x: number, y: number, s: number): void {
     const colors = [COLORS.ACCENT_WARM, COLORS.ACCENT_PINK, COLORS.ACCENT_BLUE, COLORS.SUCCESS];
+    const particleR = Math.round(6 * s);
+    const burstR    = Math.round(90 * s);
 
     colors.forEach(color => {
       for (let i = 0; i < 8; i++) {
         const angle = (i / 8) * Math.PI * 2;
-        const particle = this.add.circle(x, y, 6, color);
+        const particle = this.add.circle(x, y, particleR, color);
         this.tweens.add({
           targets: particle,
-          x: x + Math.cos(angle) * 90,
-          y: y + Math.sin(angle) * 90,
+          x: x + Math.cos(angle) * burstR,
+          y: y + Math.sin(angle) * burstR,
           alpha: 0,
           scaleX: 0,
           scaleY: 0,
@@ -122,19 +134,21 @@ export class RevealScene extends Phaser.Scene {
     });
   }
 
-  private showRevealResult(item: InventoryItem, cx: number, height: number): void {
+  private showRevealResult(item: InventoryItem, cx: number, height: number, s: number): void {
     const entry = gameStore.getCatalogEntry(item.catalogId);
+    const wordWrapW = this.scale.width - Math.round(48 * s);
 
     // Изображение подарка
+    const imgSize = Math.round(140 * s);
     const img = this.add
       .image(cx, height * 0.32, entry?.imageKey ?? item.catalogId)
-      .setDisplaySize(140, 140)
+      .setDisplaySize(imgSize, imgSize)
       .setAlpha(0);
 
     // Название
     const nameText = this.add
       .text(cx, height * 0.52, entry?.name ?? item.catalogId, {
-        fontSize: '22px',
+        fontSize: `${Math.round(22 * s)}px`,
         fontStyle: 'bold',
         color: '#ffffff',
       })
@@ -144,9 +158,9 @@ export class RevealScene extends Phaser.Scene {
     // Описание
     const descText = this.add
       .text(cx, height * 0.59, entry?.description ?? '', {
-        fontSize: '13px',
+        fontSize: `${Math.round(13 * s)}px`,
         color: '#aaaaaa',
-        wordWrap: { width: this.scale.width - 48 },
+        wordWrap: { width: wordWrapW },
         align: 'center',
       })
       .setOrigin(0.5)
@@ -159,7 +173,7 @@ export class RevealScene extends Phaser.Scene {
 
     const fromText = this.add
       .text(cx, height * 0.67, fromStr, {
-        fontSize: '13px',
+        fontSize: `${Math.round(13 * s)}px`,
         color: item.isAnonymous ? '#888888' : '#87ceeb',
       })
       .setOrigin(0.5)
@@ -172,10 +186,10 @@ export class RevealScene extends Phaser.Scene {
     if (item.message) {
       msgText = this.add
         .text(cx, height * 0.73, `"${item.message}"`, {
-          fontSize: '13px',
+          fontSize: `${Math.round(13 * s)}px`,
           color: '#cccccc',
           fontStyle: 'italic',
-          wordWrap: { width: this.scale.width - 48 },
+          wordWrap: { width: wordWrapW },
           align: 'center',
         })
         .setOrigin(0.5)
@@ -188,14 +202,19 @@ export class RevealScene extends Phaser.Scene {
 
     // Кнопка «Спасибо!»
     const closeY = msgText ? height * 0.84 : height * 0.79;
+    const btnW = Math.round(160 * s);
+    const btnH = Math.round(44 * s);
 
     const closeBg = this.add
-      .rectangle(cx, closeY, 160, 44, COLORS.PRIMARY)
+      .rectangle(cx, closeY, btnW, btnH, COLORS.PRIMARY)
       .setInteractive({ useHandCursor: true })
       .setAlpha(0);
 
     const closeLabel = this.add
-      .text(cx, closeY, 'Спасибо!', { fontSize: '16px', color: '#fff' })
+      .text(cx, closeY, 'Спасибо!', {
+        fontSize: `${Math.round(16 * s)}px`,
+        color: '#fff',
+      })
       .setOrigin(0.5)
       .setAlpha(0);
 

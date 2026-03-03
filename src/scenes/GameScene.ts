@@ -61,10 +61,13 @@ export class GameScene extends Phaser.Scene {
     const x = point.x * SCENE_WIDTH;
     const y = point.y * SCENE_HEIGHT;
 
+    const s = this.scale.width / 390;
+    const spriteSize = Math.round(56 * s);
+
     const catalog = this.getCatalog(item.catalogId);
     const sprite = this.add
       .image(x, y, catalog.imageKey)
-      .setDisplaySize(56, 56)
+      .setDisplaySize(spriteSize, spriteSize)
       .setInteractive({ useHandCursor: true });
 
     // Лёгкое свечение / пульсация чтобы отличались от декора
@@ -125,18 +128,19 @@ export class GameScene extends Phaser.Scene {
   }
 
   private showRaceConditionFeedback(x: number, y: number): void {
+    const s = this.scale.width / 390;
     const txt = this.add
-      .text(x, y - 30, 'Уже собран!', {
-        fontSize: '14px',
+      .text(x, y - Math.round(30 * s), 'Уже собран!', {
+        fontSize: `${Math.round(14 * s)}px`,
         color: '#ff6b6b',
         backgroundColor: '#00000088',
-        padding: { x: 6, y: 3 },
+        padding: { x: Math.round(6 * s), y: Math.round(3 * s) },
       })
       .setOrigin(0.5);
 
     this.tweens.add({
       targets: txt,
-      y: y - 70,
+      y: y - Math.round(70 * s),
       alpha: 0,
       duration: 1200,
       onComplete: () => txt.destroy(),
@@ -169,23 +173,60 @@ export class GameScene extends Phaser.Scene {
 
   private setupPanZoom(): void {
     const cam = this.cameras.main;
+    let pinchDist = 0;
+
+    // Регистрируем второй указатель для мультитач
+    this.input.addPointer(1);
 
     this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
-      this.isDragging = true;
-      this.dragStart = { x: ptr.x, y: ptr.y, camX: cam.scrollX, camY: cam.scrollY };
+      const p2 = this.input.pointer2;
+      if (p2.isDown) {
+        // Второй палец опустился — начинаем pinch, отменяем pan
+        this.isDragging = false;
+        pinchDist = Phaser.Math.Distance.Between(
+          this.input.pointer1.x, this.input.pointer1.y,
+          p2.x, p2.y,
+        );
+      } else {
+        // Один палец — pan
+        this.isDragging = true;
+        this.dragStart = { x: ptr.x, y: ptr.y, camX: cam.scrollX, camY: cam.scrollY };
+      }
     });
 
-    this.input.on('pointermove', (ptr: Phaser.Input.Pointer) => {
-      if (!this.isDragging || !ptr.isDown) return;
-      cam.scrollX = this.dragStart.camX - (ptr.x - this.dragStart.x);
-      cam.scrollY = this.dragStart.camY - (ptr.y - this.dragStart.y);
+    this.input.on('pointermove', () => {
+      const p1 = this.input.pointer1;
+      const p2 = this.input.pointer2;
+
+      if (p1.isDown && p2.isDown) {
+        // Pinch zoom
+        const newDist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
+        if (pinchDist > 0) {
+          cam.zoom = Phaser.Math.Clamp(cam.zoom * (newDist / pinchDist), 0.4, 2.0);
+        }
+        pinchDist = newDist;
+      } else if (this.isDragging && p1.isDown) {
+        cam.scrollX = this.dragStart.camX - (p1.x - this.dragStart.x);
+        cam.scrollY = this.dragStart.camY - (p1.y - this.dragStart.y);
+      }
     });
 
-    this.input.on('pointerup', () => { this.isDragging = false; });
+    this.input.on('pointerup', () => {
+      pinchDist = 0;
+      const p1 = this.input.pointer1;
+      const p2 = this.input.pointer2;
+      // Один палец остался — переходим обратно в pan
+      if (p1.isDown && !p2.isDown) {
+        this.isDragging = true;
+        this.dragStart = { x: p1.x, y: p1.y, camX: cam.scrollX, camY: cam.scrollY };
+      } else if (!p1.isDown) {
+        this.isDragging = false;
+      }
+    });
 
-    // Pinch-to-zoom (2 пальца)
+    // Колёсико мыши — для десктопа
     this.input.on('wheel', (_ptr: Phaser.Input.Pointer, _objs: unknown, _dx: number, dy: number) => {
-      cam.zoom = Phaser.Math.Clamp(cam.zoom - dy * 0.001, 0.5, 1.5);
+      cam.zoom = Phaser.Math.Clamp(cam.zoom - dy * 0.001, 0.4, 2.0);
     });
   }
 

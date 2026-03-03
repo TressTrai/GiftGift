@@ -13,22 +13,23 @@ export class FinaleScene extends Phaser.Scene {
   create(): void {
     const { width, height } = this.scale;
     const cx = width / 2;
+    const s = width / 390;
 
     this.add.rectangle(0, 0, width, height, 0x0a0a1e).setOrigin(0);
 
     if (this.cache.audio.exists('sfx-finale')) this.sound.play('sfx-finale', { volume: 1 });
 
     // Фейерверк из частиц
-    this.createFireworks(width, height);
+    this.createFireworks(width, height, s);
 
     // Главный текст
     const mainText = this.add
       .text(cx, height * 0.35, 'Мы вместе\nукрасили праздник!', {
-        fontSize: '28px',
+        fontSize: `${Math.round(28 * s)}px`,
         fontStyle: 'bold',
         color: '#ffb347',
         align: 'center',
-        lineSpacing: 8,
+        lineSpacing: Math.round(8 * s),
       })
       .setOrigin(0.5)
       .setAlpha(0);
@@ -38,7 +39,7 @@ export class FinaleScene extends Phaser.Scene {
     // Количество подарков
     const subText = this.add
       .text(cx, height * 0.52, 'Спасибо всем участникам!', {
-        fontSize: '16px',
+        fontSize: `${Math.round(16 * s)}px`,
         color: '#aaaaaa',
       })
       .setOrigin(0.5)
@@ -46,16 +47,19 @@ export class FinaleScene extends Phaser.Scene {
 
     this.tweens.add({ targets: subText, alpha: 1, duration: 600, delay: 800 });
 
-    // Кнопка "Посмотреть сцену" — через 4 сек
+    // Кнопка "Посмотреть итог" — через 4 сек
     this.time.delayedCall(4000, () => {
+      const btnW = Math.round(200 * s);
+      const btnH = Math.round(46 * s);
+
       const btnBg = this.add
-        .rectangle(cx, height * 0.70, 200, 46, COLORS.PRIMARY)
+        .rectangle(cx, height * 0.70, btnW, btnH, COLORS.PRIMARY)
         .setAlpha(0)
         .setInteractive({ useHandCursor: true });
 
       const btnText = this.add
         .text(cx, height * 0.70, 'Посмотреть итог', {
-          fontSize: '16px',
+          fontSize: `${Math.round(16 * s)}px`,
           color: '#fff',
         })
         .setOrigin(0.5)
@@ -67,7 +71,7 @@ export class FinaleScene extends Phaser.Scene {
     });
   }
 
-  private createFireworks(w: number, h: number): void {
+  private createFireworks(w: number, h: number, s: number): void {
     const colors = [
       COLORS.ACCENT_WARM,
       COLORS.ACCENT_PINK,
@@ -75,6 +79,10 @@ export class FinaleScene extends Phaser.Scene {
       COLORS.SUCCESS,
       0xffffff,
     ];
+
+    const particleR  = Math.round(5 * s);
+    const distMin    = Math.round(60 * s);
+    const distMax    = Math.round(110 * s);
 
     let count = 0;
     const timer = this.time.addEvent({
@@ -88,8 +96,8 @@ export class FinaleScene extends Phaser.Scene {
 
         for (let i = 0; i < 12; i++) {
           const angle = (i / 12) * Math.PI * 2;
-          const dist = Phaser.Math.Between(60, 110);
-          const p = this.add.circle(x, y, 5, color);
+          const dist = Phaser.Math.Between(distMin, distMax);
+          const p = this.add.circle(x, y, particleR, color);
           this.tweens.add({
             targets: p,
             x: x + Math.cos(angle) * dist,

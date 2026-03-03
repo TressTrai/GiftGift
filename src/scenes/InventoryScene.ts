@@ -18,17 +18,18 @@ export class InventoryScene extends Phaser.Scene {
 
   create(): void {
     const { width, height } = this.scale;
+    const s = width / 390;
 
     this.add.rectangle(0, 0, width, height, COLORS.BG).setOrigin(0);
     this.add
-      .text(width / 2, 20, 'Инвентарь', {
-        fontSize: '20px',
+      .text(width / 2, Math.round(20 * s), 'Инвентарь', {
+        fontSize: `${Math.round(20 * s)}px`,
         fontStyle: 'bold',
         color: '#ffffff',
       })
       .setOrigin(0.5, 0);
 
-    const scrollY = this.renderContent(width, height);
+    const scrollY = this.renderContent(width, height, s);
 
     // Поддержка скролла (drag по вертикали)
     this.setupScroll(scrollY);
@@ -50,40 +51,47 @@ export class InventoryScene extends Phaser.Scene {
     });
   }
 
-  private renderContent(w: number, _h: number): number {
-    let y = 56;
-    const TAB_BOTTOM = 64;
+  private renderContent(w: number, _h: number, s: number): number {
+    let y = Math.round(56 * s);
+    const TAB_BOTTOM = Math.round(64 * s);
+    const sectionGap = Math.round(16 * s);
 
     // ── Тройка целей ───────────────────────────────────────────────────────
-    y = this.renderTrioGoals(w, y);
-    y += 16;
+    y = this.renderTrioGoals(w, y, s);
+    y += sectionGap;
 
     // ── Новые подарки ──────────────────────────────────────────────────────
     const wrapped = gameStore.wrappedGifts;
     if (wrapped.length > 0) {
-      y = this.renderWrappedSection(w, y, wrapped);
-      y += 16;
+      y = this.renderWrappedSection(w, y, wrapped, s);
+      y += sectionGap;
     }
 
     // ── Мой инвентарь ──────────────────────────────────────────────────────
-    y = this.renderInventorySection(w, y, gameStore.inventory);
+    y = this.renderInventorySection(w, y, gameStore.inventory, s);
 
     return y + TAB_BOTTOM;
   }
 
-  private renderTrioGoals(w: number, startY: number): number {
+  private renderTrioGoals(w: number, startY: number, s: number): number {
     const goal = gameStore.personalGoal;
-    const CARD_W = (w - 32 - 16) / 3;
-    const CARD_H = 100;
+    const pad   = Math.round(16 * s);
+    const gap   = Math.round(8 * s);
+    const CARD_W = (w - 2 * pad - 2 * gap) / 3;
+    const CARD_H = Math.round(100 * s);
+    const labelOffY = Math.round(22 * s);
+    const imgY      = Math.round(32 * s);
+    const textY     = Math.round(78 * s);
+    const imgSize   = Math.round(44 * s);
     const y = startY;
 
     this.add
-      .text(16, y, 'ТВОИ ЦЕЛИ:', { fontSize: '13px', color: '#aaaaaa' })
+      .text(pad, y, 'ТВОИ ЦЕЛИ:', { fontSize: `${Math.round(13 * s)}px`, color: '#aaaaaa' })
       .setOrigin(0);
 
     goal.catalogIds.forEach((catId, i) => {
-      const x = 16 + i * (CARD_W + 8);
-      const cardY = y + 22;
+      const x = pad + i * (CARD_W + gap);
+      const cardY = y + labelOffY;
 
       this.add
         .rectangle(x, cardY, CARD_W, CARD_H, 0x222240)
@@ -91,50 +99,55 @@ export class InventoryScene extends Phaser.Scene {
         .setStrokeStyle(1, goal.collected[i] ? COLORS.SUCCESS : 0x444466);
 
       const entry = gameStore.getCatalogEntry(catId);
-      this.add.image(x + CARD_W / 2, cardY + 32, entry?.imageKey ?? catId).setDisplaySize(44, 44);
+      this.add.image(x + CARD_W / 2, cardY + imgY, entry?.imageKey ?? catId).setDisplaySize(imgSize, imgSize);
 
       this.add
-        .text(x + CARD_W / 2, cardY + 78, entry?.name ?? catId, {
-          fontSize: '10px',
+        .text(x + CARD_W / 2, cardY + textY, entry?.name ?? catId, {
+          fontSize: `${Math.round(10 * s)}px`,
           color: '#cccccc',
-          wordWrap: { width: CARD_W - 8 },
+          wordWrap: { width: CARD_W - gap },
           align: 'center',
         })
         .setOrigin(0.5, 1);
 
       if (goal.collected[i]) {
         this.add
-          .text(x + CARD_W - 6, cardY + 4, '✓', {
-            fontSize: '16px',
+          .text(x + CARD_W - Math.round(6 * s), cardY + Math.round(4 * s), '✓', {
+            fontSize: `${Math.round(16 * s)}px`,
             color: '#4caf50',
           })
           .setOrigin(1, 0);
       }
     });
 
-    return y + 22 + CARD_H + 8;
+    return y + labelOffY + CARD_H + gap;
   }
 
-  private renderWrappedSection(w: number, startY: number, gifts: WrappedGift[]): number {
-    this.add.text(16, startY, `У ТЕБЯ ${gifts.length} НОВЫХ ПОДАРКОВ!`, {
-      fontSize: '13px',
+  private renderWrappedSection(w: number, startY: number, gifts: WrappedGift[], s: number): number {
+    const pad      = Math.round(16 * s);
+    const gap      = Math.round(8 * s);
+    const CARD_SIZE = Math.round(72 * s);
+    const imgSize  = Math.round(48 * s);
+    const headerH  = Math.round(44 * s);
+
+    this.add.text(pad, startY, `У ТЕБЯ ${gifts.length} НОВЫХ ПОДАРКОВ!`, {
+      fontSize: `${Math.round(13 * s)}px`,
       color: '#ffb347',
     }).setOrigin(0);
 
-    this.add.text(16, startY + 18, 'Интересно, что там?', {
-      fontSize: '12px',
+    this.add.text(pad, startY + Math.round(18 * s), 'Интересно, что там?', {
+      fontSize: `${Math.round(12 * s)}px`,
       color: '#888888',
     }).setOrigin(0);
 
-    const CARD_SIZE = 72;
-    const COLS = Math.floor((w - 32) / (CARD_SIZE + 8));
+    const COLS = Math.floor((w - 2 * pad) / (CARD_SIZE + gap));
     let row = 0;
 
     gifts.forEach((g, i) => {
       const col = i % COLS;
       if (i > 0 && col === 0) row++;
-      const x = 16 + col * (CARD_SIZE + 8);
-      const y = startY + 44 + row * (CARD_SIZE + 8);
+      const x = pad + col * (CARD_SIZE + gap);
+      const y = startY + headerH + row * (CARD_SIZE + gap);
 
       const bg = this.add
         .rectangle(x, y, CARD_SIZE, CARD_SIZE, 0x222240)
@@ -144,7 +157,7 @@ export class InventoryScene extends Phaser.Scene {
 
       this.add
         .image(x + CARD_SIZE / 2, y + CARD_SIZE / 2, 'wrapped-gift')
-        .setDisplaySize(48, 48);
+        .setDisplaySize(imgSize, imgSize);
 
       bg.on('pointerup', () => {
         this.scene.launch(SCENE_KEYS.REVEAL, { instanceId: g.instanceId });
@@ -152,34 +165,36 @@ export class InventoryScene extends Phaser.Scene {
     });
 
     const rows = Math.ceil(gifts.length / COLS);
-    return startY + 44 + rows * (CARD_SIZE + 8);
+    return startY + headerH + rows * (CARD_SIZE + gap);
   }
 
-  private renderInventorySection(w: number, startY: number, items: InventoryItem[]): number {
-    this.add.text(16, startY, 'МОЙ ИНВЕНТАРЬ:', {
-      fontSize: '13px',
+  private renderInventorySection(w: number, startY: number, items: InventoryItem[], s: number): number {
+    const pad    = Math.round(16 * s);
+    const gap    = Math.round(8 * s);
+    const CARD_W = Math.round(88 * s);
+    const CARD_H = Math.round(104 * s);
+    const imgSize = Math.round(52 * s);
+
+    this.add.text(pad, startY, 'МОЙ ИНВЕНТАРЬ:', {
+      fontSize: `${Math.round(13 * s)}px`,
       color: '#aaaaaa',
     }).setOrigin(0);
 
     if (items.length === 0) {
-      this.add.text(w / 2, startY + 40, 'Пока пусто', {
-        fontSize: '14px',
+      this.add.text(w / 2, startY + Math.round(40 * s), 'Пока пусто', {
+        fontSize: `${Math.round(14 * s)}px`,
         color: '#555577',
       }).setOrigin(0.5, 0);
-      return startY + 80;
+      return startY + Math.round(80 * s);
     }
 
-    const CARD_W = 88;
-    const CARD_H = 104;
-    const GAP = 8;
-    const COLS = Math.floor((w - 32 + GAP) / (CARD_W + GAP));
-    let row = 0;
+    const COLS = Math.floor((w - 2 * pad + gap) / (CARD_W + gap));
 
     items.forEach((item, i) => {
       const col = i % COLS;
-      if (i > 0 && col === 0) row++;
-      const x = 16 + col * (CARD_W + GAP);
-      const y = startY + 24 + row * (CARD_H + GAP);
+      const row = Math.floor(i / COLS);
+      const x = pad + col * (CARD_W + gap);
+      const y = startY + Math.round(24 * s) + row * (CARD_H + gap);
 
       const entry = gameStore.getCatalogEntry(item.catalogId);
       const borderColor = item.type === 'gift' ? COLORS.GIFT_BORDER : COLORS.ITEM_BORDER;
@@ -191,14 +206,14 @@ export class InventoryScene extends Phaser.Scene {
         .setInteractive({ useHandCursor: true });
 
       this.add
-        .image(x + CARD_W / 2, y + 38, entry?.imageKey ?? item.catalogId)
-        .setDisplaySize(52, 52);
+        .image(x + CARD_W / 2, y + Math.round(38 * s), entry?.imageKey ?? item.catalogId)
+        .setDisplaySize(imgSize, imgSize);
 
       this.add
-        .text(x + CARD_W / 2, y + 68, entry?.name ?? item.catalogId, {
-          fontSize: '10px',
+        .text(x + CARD_W / 2, y + Math.round(68 * s), entry?.name ?? item.catalogId, {
+          fontSize: `${Math.round(10 * s)}px`,
           color: '#cccccc',
-          wordWrap: { width: CARD_W - 8 },
+          wordWrap: { width: CARD_W - gap },
           align: 'center',
         })
         .setOrigin(0.5, 0);
@@ -210,7 +225,7 @@ export class InventoryScene extends Phaser.Scene {
     });
 
     const rows = Math.ceil(items.length / COLS);
-    return startY + 24 + rows * (CARD_H + GAP);
+    return startY + Math.round(24 * s) + rows * (CARD_H + gap);
   }
 
   private setupScroll(contentHeight: number): void {

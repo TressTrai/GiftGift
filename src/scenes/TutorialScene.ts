@@ -17,25 +17,28 @@ export class TutorialScene extends Phaser.Scene {
 
   create(): void {
     const { width, height } = this.scale;
+    const s = width / 390;
 
     this.add.rectangle(0, 0, width, height, COLORS.BG).setOrigin(0);
 
     this.pages = [
-      this.createPage1(width, height),
-      this.createPage2(width, height),
+      this.createPage1(width, height, s),
+      this.createPage2(width, height, s),
     ];
 
     // Показываем только первую страницу
     this.pages[1].setVisible(false);
 
     // Индикаторы страниц
-    const dot1 = this.add.circle(width / 2 - 12, height * 0.88, 5, COLORS.ACCENT_WARM);
-    const dot2 = this.add.circle(width / 2 + 12, height * 0.88, 5, 0x444444);
+    const dotR  = Math.round(5 * s);
+    const dotOff = Math.round(12 * s);
+    const dot1 = this.add.circle(width / 2 - dotOff, height * 0.88, dotR, COLORS.ACCENT_WARM);
+    const dot2 = this.add.circle(width / 2 + dotOff, height * 0.88, dotR, 0x444444);
 
     // Кнопка "Далее"
     const nextBtn = this.add
       .text(width / 2, height * 0.94, 'Далее →', {
-        fontSize: '18px',
+        fontSize: `${Math.round(18 * s)}px`,
         color: '#ffb347',
       })
       .setOrigin(0.5)
@@ -67,12 +70,12 @@ export class TutorialScene extends Phaser.Scene {
     });
   }
 
-  private createPage1(w: number, h: number): Phaser.GameObjects.Container {
+  private createPage1(w: number, h: number, s: number): Phaser.GameObjects.Container {
     const items: Phaser.GameObjects.GameObject[] = [];
 
     items.push(
       this.add.text(w / 2, h * 0.10, 'Как играть', {
-        fontSize: '24px',
+        fontSize: `${Math.round(24 * s)}px`,
         fontStyle: 'bold',
         color: '#ffffff',
       }).setOrigin(0.5),
@@ -88,9 +91,9 @@ export class TutorialScene extends Phaser.Scene {
     steps.forEach((step, i) => {
       const y = h * (0.25 + i * 0.14);
       items.push(
-        this.add.text(w * 0.15, y, step.icon, { fontSize: '28px' }),
+        this.add.text(w * 0.15, y, step.icon, { fontSize: `${Math.round(28 * s)}px` }),
         this.add.text(w * 0.28, y, step.text, {
-          fontSize: '16px',
+          fontSize: `${Math.round(16 * s)}px`,
           color: '#ffffff',
         }).setOrigin(0, 0.5),
       );
@@ -99,12 +102,12 @@ export class TutorialScene extends Phaser.Scene {
     return this.add.container(0, 0, items);
   }
 
-  private createPage2(w: number, h: number): Phaser.GameObjects.Container {
+  private createPage2(w: number, h: number, s: number): Phaser.GameObjects.Container {
     const items: Phaser.GameObjects.GameObject[] = [];
 
     items.push(
       this.add.text(w / 2, h * 0.10, 'Подробнее', {
-        fontSize: '24px',
+        fontSize: `${Math.round(24 * s)}px`,
         fontStyle: 'bold',
         color: '#ffffff',
       }).setOrigin(0.5),
@@ -118,9 +121,9 @@ export class TutorialScene extends Phaser.Scene {
     details.forEach((d, i) => {
       const y = h * (0.28 + i * 0.22);
       items.push(
-        this.add.text(w * 0.12, y, d.icon, { fontSize: '32px' }),
+        this.add.text(w * 0.12, y, d.icon, { fontSize: `${Math.round(32 * s)}px` }),
         this.add.text(w * 0.26, y, d.text, {
-          fontSize: '15px',
+          fontSize: `${Math.round(15 * s)}px`,
           color: '#ffffff',
           lineSpacing: 6,
         }).setOrigin(0, 0.5),

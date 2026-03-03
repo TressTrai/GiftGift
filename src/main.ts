@@ -20,8 +20,8 @@ const config: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 390,    // iPhone 14 portrait
-    height: 844,
+    width: 1080,   // Android portrait (1080×2400)
+    height: 2400,
   },
 
   // DOM-элементы (формы, инпуты)

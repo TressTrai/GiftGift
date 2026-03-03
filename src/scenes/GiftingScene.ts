@@ -33,7 +33,7 @@ export class GiftingScene extends Phaser.Scene {
     this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0).setInteractive();
 
     // Используем DOM для сложного UI формы
-    const html = this.buildFormHTML(item, resultCatalogId, width);
+    const html = this.buildFormHTML(item, resultCatalogId, width, height);
     const dom = this.add.dom(width / 2, height / 2).createFromHTML(html);
 
     this.populateRecipients(dom, gameStore.allUsers);
@@ -93,7 +93,21 @@ export class GiftingScene extends Phaser.Scene {
     return id;
   }
 
-  private buildFormHTML(item: InventoryItem, resultCatalogId: string, width: number): string {
+  private buildFormHTML(item: InventoryItem, resultCatalogId: string, width: number, height: number): string {
+    const s = width / 390;
+    const containerW = width - Math.round(48 * s);
+    const pad    = Math.round(20 * s);
+    const radius = Math.round(14 * s);
+    const fnt16  = Math.round(16 * s);
+    const fnt15  = Math.round(15 * s);
+    const fnt14  = Math.round(14 * s);
+    const fnt13  = Math.round(13 * s);
+    const fnt11  = Math.round(11 * s);
+    const gap8   = Math.round(8 * s);
+    const gap12  = Math.round(12 * s);
+    const chkSz  = Math.round(18 * s);
+    const btnPad = Math.round(12 * s);
+
     const itemEntry = gameStore.getCatalogEntry(item.catalogId);
     const itemName = itemEntry?.name ?? item.catalogId;
 
@@ -101,57 +115,61 @@ export class GiftingScene extends Phaser.Scene {
       ? (() => {
           const resultEntry = gameStore.getCatalogEntry(resultCatalogId);
           const resultName = resultEntry?.name ?? resultCatalogId;
-          return `<p style="color:#ffb347;font-size:13px;margin:8px 0;text-align:center">
+          return `<p style="color:#ffb347;font-size:${fnt13}px;margin:${gap8}px 0;text-align:center">
                     → Получатель получит: <strong>${resultName}</strong>
                   </p>`;
         })()
       : '';
 
     return `
-      <div style="background:#1a1a36;border-radius:14px;padding:20px;
-                  width:${width - 48}px;max-height:85vh;overflow-y:auto">
-        <p style="color:#fff;font-size:16px;font-weight:bold;margin-bottom:8px">Ты даришь:</p>
-        <div style="background:#222244;border-radius:8px;padding:12px;margin-bottom:8px;
-                    display:flex;align-items:center;gap:12px">
-          <span style="font-size:14px;color:#fff">${itemName}</span>
+      <div style="background:#1a1a36;border-radius:${radius}px;padding:${pad}px;
+                  width:${containerW}px;height:${Math.round(height * 0.68)}px;overflow-y:auto">
+        <p style="color:#fff;font-size:${fnt16}px;font-weight:bold;margin-bottom:${gap8}px">Ты даришь:</p>
+        <div style="background:#222244;border-radius:${gap8}px;padding:${gap12}px;
+                    margin-bottom:${gap8}px;display:flex;align-items:center;gap:${gap12}px">
+          <span style="font-size:${fnt14}px;color:#fff">${itemName}</span>
         </div>
         ${transformPreview}
 
-        <p style="color:#aaa;font-size:13px;margin:12px 0 6px">Выбери получателя:</p>
+        <p style="color:#aaa;font-size:${fnt13}px;margin:${gap12}px 0 ${gap8}px">
+          Выбери получателя:
+        </p>
         <div id="recipientList"
-             style="background:#222244;border-radius:8px;max-height:160px;overflow-y:auto">
+             style="background:#222244;border-radius:${gap8}px;
+                    max-height:${Math.round(260 * s)}px;overflow-y:auto">
         </div>
 
-        <p style="color:#aaa;font-size:13px;margin:12px 0 6px">
+        <p style="color:#aaa;font-size:${fnt13}px;margin:${gap12}px 0 ${gap8}px">
           Сообщение (необязательно):
         </p>
         <div style="position:relative">
           <input id="msgInput" type="text" maxlength="${MESSAGE_MAX_LENGTH}"
             placeholder="Напиши что-нибудь..."
-            style="width:100%;padding:10px;border-radius:6px;border:none;font-size:14px;
-                   background:#222244;color:#fff;box-sizing:border-box" />
+            style="width:100%;padding:${Math.round(10*s)}px;border-radius:${Math.round(6*s)}px;
+                   border:none;font-size:${fnt14}px;background:#222244;color:#fff;
+                   box-sizing:border-box" />
           <span id="msgCount"
-                style="position:absolute;right:8px;bottom:10px;
-                       font-size:11px;color:#666">0/${MESSAGE_MAX_LENGTH}</span>
+                style="position:absolute;right:${gap8}px;bottom:${Math.round(10*s)}px;
+                       font-size:${fnt11}px;color:#666">0/${MESSAGE_MAX_LENGTH}</span>
         </div>
 
-        <label style="display:flex;align-items:center;gap:8px;margin:12px 0;
-                      color:#fff;font-size:14px;cursor:pointer">
+        <label style="display:flex;align-items:center;gap:${gap8}px;margin:${gap12}px 0;
+                      color:#fff;font-size:${fnt14}px;cursor:pointer">
           <input id="anonCheck" type="checkbox"
-                 style="width:18px;height:18px;cursor:pointer" />
+                 style="width:${chkSz}px;height:${chkSz}px;cursor:pointer" />
           Анонимно?
         </label>
 
-        <div style="display:flex;gap:8px;margin-top:4px">
+        <div style="display:flex;gap:${gap8}px;margin-top:${Math.round(4*s)}px">
           <button id="sendBtn" disabled
-            style="flex:1;background:#7b68ee;color:#fff;border:none;padding:12px;
-                   border-radius:8px;font-size:16px;cursor:pointer;
-                   opacity:0.5" onclick="">
+            style="flex:1;background:#7b68ee;color:#fff;border:none;padding:${btnPad}px;
+                   border-radius:${gap8}px;font-size:${fnt16}px;cursor:pointer;opacity:0.5">
             Подарить
           </button>
           <button id="cancelBtn"
-            style="background:#333;color:#aaa;border:none;padding:12px 20px;
-                   border-radius:8px;font-size:15px;cursor:pointer">
+            style="background:#333;color:#aaa;border:none;
+                   padding:${btnPad}px ${Math.round(20*s)}px;
+                   border-radius:${gap8}px;font-size:${fnt15}px;cursor:pointer">
             Отмена
           </button>
         </div>
@@ -163,6 +181,7 @@ export class GiftingScene extends Phaser.Scene {
     dom: Phaser.GameObjects.DOMElement,
     users: User[],
   ): void {
+    const s = this.scale.width / 390;
     const list = dom.getChildByID('recipientList') as HTMLElement;
     const myId = gameStore.user.id;
 
@@ -175,8 +194,8 @@ export class GiftingScene extends Phaser.Scene {
       div.className = 'recipient-item';
       div.dataset['userId'] = u.id;
       div.style.cssText =
-        'padding:10px 14px;cursor:pointer;color:#fff;font-size:15px;' +
-        'border-bottom:1px solid #333355;transition:background 0.15s';
+        `padding:${Math.round(10*s)}px ${Math.round(14*s)}px;cursor:pointer;color:#fff;` +
+        `font-size:${Math.round(15*s)}px;border-bottom:1px solid #333355;transition:background 0.15s`;
       div.textContent = u.name;
       list.appendChild(div);
     });
@@ -191,13 +210,14 @@ export class GiftingScene extends Phaser.Scene {
   }
 
   private showSuccessFeedback(w: number, h: number): void {
+    const s = w / 390;
     const txt = this.add
       .text(w / 2, h / 2, 'Подарок отправлен!\nКоллега будет рад', {
-        fontSize: '20px',
+        fontSize: `${Math.round(20 * s)}px`,
         color: '#4caf50',
         align: 'center',
         backgroundColor: '#000000cc',
-        padding: { x: 20, y: 16 },
+        padding: { x: Math.round(20 * s), y: Math.round(16 * s) },
       })
       .setOrigin(0.5);
 

@@ -77,19 +77,24 @@ export class BootScene extends Phaser.Scene {
 
   private createLoadingBar(): void {
     const { width, height } = this.scale;
-    const barBg = this.add.rectangle(width / 2, height / 2, 300, 20, 0x333333);
-    const bar = this.add.rectangle(width / 2 - 150, height / 2, 0, 16, 0xffb347);
+    const s = width / 390;
+    const barW  = Math.round(300 * s);
+    const barH  = Math.round(20 * s);
+    const fillH = Math.round(16 * s);
+
+    const barBg = this.add.rectangle(width / 2, height / 2, barW, barH, 0x333333);
+    const bar = this.add.rectangle(width / 2 - barW / 2, height / 2, 0, fillH, 0xffb347);
     bar.setOrigin(0, 0.5);
 
     const text = this.add
-      .text(width / 2, height / 2 + 40, 'Загрузка...', {
-        fontSize: '16px',
+      .text(width / 2, height / 2 + Math.round(40 * s), 'Загрузка...', {
+        fontSize: `${Math.round(16 * s)}px`,
         color: '#aaaaaa',
       })
       .setOrigin(0.5);
 
     this.load.on('progress', (value: number) => {
-      bar.width = 296 * value;
+      bar.width = (barW - Math.round(4 * s)) * value;
     });
 
     this.load.on('complete', () => {

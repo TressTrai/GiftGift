@@ -21,12 +21,18 @@ export class AuthScene extends Phaser.Scene {
   create(): void {
     const { width, height } = this.scale;
     const cx = width / 2;
+    const s = width / 390;
+
+    const inputW  = Math.round(260 * s);
+    const inputP  = Math.round(12 * s);
+    const inputR  = Math.round(8 * s);
+    const inputF  = Math.round(16 * s);
 
     this.add.rectangle(0, 0, width, height, COLORS.BG).setOrigin(0);
 
     this.add
       .text(cx, height * 0.15, 'Февромарт', {
-        fontSize: '32px',
+        fontSize: `${Math.round(32 * s)}px`,
         fontStyle: 'bold',
         color: '#ffb347',
       })
@@ -34,7 +40,7 @@ export class AuthScene extends Phaser.Scene {
 
     this.add
       .text(cx, height * 0.22, 'Игра дарения подарков', {
-        fontSize: '16px',
+        fontSize: `${Math.round(16 * s)}px`,
         color: '#aaaaaa',
       })
       .setOrigin(0.5);
@@ -43,36 +49,45 @@ export class AuthScene extends Phaser.Scene {
     const nameInput = this.add
       .dom(cx, height * 0.38)
       .createFromHTML(
-        '<input type="text" placeholder="Твоё имя" maxlength="30" ' +
-        'style="width:260px;padding:12px;border-radius:8px;border:none;' +
-        'font-size:16px;text-align:center;background:#2a2a4e;color:#fff;" />',
+        `<input type="text" placeholder="Твоё имя" maxlength="30" ` +
+        `style="width:${inputW}px;padding:${inputP}px;border-radius:${inputR}px;border:none;` +
+        `font-size:${inputF}px;text-align:center;background:#2a2a4e;color:#fff;" />`,
       );
 
     const passwordInput = this.add
       .dom(cx, height * 0.50)
       .createFromHTML(
-        '<input type="password" placeholder="Пароль" maxlength="50" ' +
-        `style="width:260px;padding:12px;border-radius:8px;border:none;` +
-        `font-size:16px;text-align:center;background:#2a2a4e;color:#fff;" />`,
+        `<input type="password" placeholder="Пароль" maxlength="50" ` +
+        `style="width:${inputW}px;padding:${inputP}px;border-radius:${inputR}px;border:none;` +
+        `font-size:${inputF}px;text-align:center;background:#2a2a4e;color:#fff;" />`,
       );
 
     // Кнопка действия
+    const btnW = Math.round(260 * s);
+    const btnH = Math.round(48 * s);
+
     const btnBg = this.add
-      .rectangle(cx, height * 0.62, 260, 48, COLORS.PRIMARY, 1)
+      .rectangle(cx, height * 0.62, btnW, btnH, COLORS.PRIMARY, 1)
       .setInteractive({ useHandCursor: true });
 
     const btnText = this.add
-      .text(cx, height * 0.62, 'Войти', { fontSize: '18px', color: '#fff' })
+      .text(cx, height * 0.62, 'Войти', {
+        fontSize: `${Math.round(18 * s)}px`,
+        color: '#fff',
+      })
       .setOrigin(0.5);
 
     this.errorText = this.add
-      .text(cx, height * 0.71, '', { fontSize: '14px', color: '#ff6b6b' })
+      .text(cx, height * 0.71, '', {
+        fontSize: `${Math.round(14 * s)}px`,
+        color: '#ff6b6b',
+      })
       .setOrigin(0.5);
 
     // Переключатель режима
     const modeText = this.add
       .text(cx, height * 0.78, 'Нет аккаунта? Зарегистрироваться', {
-        fontSize: '14px',
+        fontSize: `${Math.round(14 * s)}px`,
         color: '#87ceeb',
       })
       .setOrigin(0.5)

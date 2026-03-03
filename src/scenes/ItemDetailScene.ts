@@ -22,27 +22,30 @@ export class ItemDetailScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const { item } = data;
     const entry = gameStore.getCatalogEntry(item.catalogId);
+    const s = width / 390;
 
     // Затемнение
     this.add.rectangle(0, 0, width, height, 0x000000, 0.6).setOrigin(0).setInteractive();
 
     // Карточка
-    const cardW = width - 48;
-    const cardH = 360;
-    const cardX = 24;
+    const cardMargin = Math.round(24 * s);
+    const cardW = width - 2 * cardMargin;
+    const cardH = Math.round(360 * s);
+    const cardX = cardMargin;
     const cardY = (height - cardH) / 2;
 
     this.add.rectangle(cardX, cardY, cardW, cardH, 0x1e1e3a).setOrigin(0);
 
     // Изображение подарка
+    const imgSize = Math.round(120 * s);
     this.add
-      .image(cardX + cardW / 2, cardY + 90, entry?.imageKey ?? item.catalogId)
-      .setDisplaySize(120, 120);
+      .image(cardX + cardW / 2, cardY + Math.round(90 * s), entry?.imageKey ?? item.catalogId)
+      .setDisplaySize(imgSize, imgSize);
 
     // Название
     this.add
-      .text(cardX + cardW / 2, cardY + 164, entry?.name ?? item.catalogId, {
-        fontSize: '18px',
+      .text(cardX + cardW / 2, cardY + Math.round(164 * s), entry?.name ?? item.catalogId, {
+        fontSize: `${Math.round(18 * s)}px`,
         fontStyle: 'bold',
         color: '#ffffff',
       })
@@ -50,10 +53,10 @@ export class ItemDetailScene extends Phaser.Scene {
 
     // Описание
     this.add
-      .text(cardX + cardW / 2, cardY + 200, entry?.description ?? '', {
-        fontSize: '14px',
+      .text(cardX + cardW / 2, cardY + Math.round(200 * s), entry?.description ?? '', {
+        fontSize: `${Math.round(14 * s)}px`,
         color: '#aaaaaa',
-        wordWrap: { width: cardW - 32 },
+        wordWrap: { width: cardW - Math.round(32 * s) },
         align: 'center',
       })
       .setOrigin(0.5);
@@ -62,19 +65,19 @@ export class ItemDetailScene extends Phaser.Scene {
     if (item.type === 'gift') {
       const fromText = item.isAnonymous ? 'Анонимный подарок' : `От: ${item.fromUserName ?? '?'}`;
       this.add
-        .text(cardX + cardW / 2, cardY + 240, fromText, {
-          fontSize: '13px',
+        .text(cardX + cardW / 2, cardY + Math.round(240 * s), fromText, {
+          fontSize: `${Math.round(13 * s)}px`,
           color: item.isAnonymous ? '#888888' : '#87ceeb',
         })
         .setOrigin(0.5);
 
       if (item.message) {
         this.add
-          .text(cardX + cardW / 2, cardY + 265, `"${item.message}"`, {
-            fontSize: '13px',
+          .text(cardX + cardW / 2, cardY + Math.round(265 * s), `"${item.message}"`, {
+            fontSize: `${Math.round(13 * s)}px`,
             color: '#cccccc',
             fontStyle: 'italic',
-            wordWrap: { width: cardW - 32 },
+            wordWrap: { width: cardW - Math.round(32 * s) },
             align: 'center',
           })
           .setOrigin(0.5);
@@ -82,13 +85,17 @@ export class ItemDetailScene extends Phaser.Scene {
     }
 
     // Кнопка "Подарить"
+    const btnW = Math.round(200 * s);
+    const btnH = Math.round(40 * s);
+    const btnY = cardY + cardH - Math.round(28 * s);
+
     const btnBg = this.add
-      .rectangle(cardX + cardW / 2, cardY + cardH - 28, 200, 40, COLORS.PRIMARY)
+      .rectangle(cardX + cardW / 2, btnY, btnW, btnH, COLORS.PRIMARY)
       .setInteractive({ useHandCursor: true });
 
     this.add
-      .text(cardX + cardW / 2, cardY + cardH - 28, 'Подарить это', {
-        fontSize: '16px',
+      .text(cardX + cardW / 2, btnY, 'Подарить это', {
+        fontSize: `${Math.round(16 * s)}px`,
         color: '#ffffff',
       })
       .setOrigin(0.5);
