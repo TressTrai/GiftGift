@@ -80,6 +80,10 @@ try {
   db.exec(`ALTER TABLE inventory ADD COLUMN hourly_notified INTEGER NOT NULL DEFAULT 0`);
 } catch { /* колонка уже есть */ }
 
+try {
+  db.exec(`ALTER TABLE inventory ADD COLUMN result_catalog_id TEXT`);
+} catch { /* колонка уже есть */ }
+
 // Инициализация коллективной цели если её ещё нет
 const goalExists = db
   .prepare('SELECT id FROM collective_goal WHERE id = 1')

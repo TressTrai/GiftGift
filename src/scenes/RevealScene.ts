@@ -3,7 +3,7 @@ import { SCENE_KEYS, COLORS, EVENTS } from '../utils/constants';
 import { EventBus } from '../utils/eventBus';
 import { gameStore } from '../store/GameStore';
 import { revealGift } from '../api/game';
-import { InventoryItem } from '../types';
+import { RevealResult } from '../types';
 
 interface RevealData {
   instanceId: string;
@@ -50,19 +50,21 @@ export class RevealScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    // Закрытие по тапу вне коробки (пока коробка ещё не тронута)
+    const closeDist = Math.round(80 * s);
+    const closeFn = (ptr: Phaser.Input.Pointer) => {
+      const d = Phaser.Math.Distance.Between(ptr.x, ptr.y, cx, height * 0.40);
+      if (d > closeDist) this.scene.stop();
+    };
+    this.input.on('pointerup', closeFn);
+
     // Тап запускает раскрытие
     box.once('pointerup', () => {
+      this.input.off('pointerup', closeFn); // больше не закрываем по тапу
       this.tweens.killTweensOf(box);
       hint.destroy();
       box.disableInteractive();
       this.startReveal(data.instanceId, box, cx, height, s);
-    });
-
-    // Закрытие по тапу вне коробки
-    const closeDist = Math.round(80 * s);
-    this.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
-      const d = Phaser.Math.Distance.Between(ptr.x, ptr.y, cx, height * 0.40);
-      if (d > closeDist) this.scene.stop();
     });
   }
 
@@ -77,8 +79,8 @@ export class RevealScene extends Phaser.Scene {
     this.createShakeAnimation(box, s);
 
     revealGift(instanceId)
-      .then(revealedItem => {
-        gameStore.applyGiftRevealed(instanceId, revealedItem);
+      .then(result => {
+        const trioCompleted = gameStore.applyGiftRevealed(instanceId, result);
 
         this.time.delayedCall(600, () => {
           this.createBurstEffect(cx, height * 0.40, s);
@@ -91,7 +93,7 @@ export class RevealScene extends Phaser.Scene {
             duration: 300,
             onComplete: () => {
               box.destroy();
-              this.showRevealResult(revealedItem, cx, height, s);
+              this.showRevealResult(result, trioCompleted, cx, height, s);
             },
           });
         });
@@ -134,7 +136,7 @@ export class RevealScene extends Phaser.Scene {
     });
   }
 
-  private showRevealResult(item: InventoryItem, cx: number, height: number, s: number): void {
+  private showRevealResult(item: RevealResult, trioCompleted: boolean, cx: number, height: number, s: number): void {
     const entry = gameStore.getCatalogEntry(item.catalogId);
     const wordWrapW = this.scale.width - Math.round(48 * s);
 
@@ -224,7 +226,93 @@ export class RevealScene extends Phaser.Scene {
 
     closeBg.on('pointerup', () => {
       EventBus.emit(EVENTS.GIFT_REVEALED, item);
-      this.scene.stop();
+      if (trioCompleted) {
+        this.showTrioCompletedScreen(cx, height, s);
+      } else {
+        this.scene.stop();
+      }
     });
+  }
+
+  private showTrioCompletedScreen(cx: number, height: number, s: number): void {
+    // Затемняем предыдущий контент
+    this.add.rectangle(0, 0, cx * 2, height, 0x000000, 0.92).setOrigin(0);
+
+    if (this.cache.audio.exists('sfx-trio-complete')) {
+      this.sound.play('sfx-trio-complete', { volume: 0.8 });
+    }
+
+    // Заголовок
+    const titleText = this.add
+      .text(cx, height * 0.22, 'Тройка собрана!', {
+        fontSize: `${Math.round(26 * s)}px`,
+        fontStyle: 'bold',
+        color: '#ffb347',
+      })
+      .setOrigin(0.5)
+      .setAlpha(0);
+
+    const goal = gameStore.personalGoal;
+    const completedLabel = this.add
+      .text(cx, height * 0.30, `Всего троек: ${goal.completedCount}`, {
+        fontSize: `${Math.round(14 * s)}px`,
+        color: '#4caf50',
+      })
+      .setOrigin(0.5)
+      .setAlpha(0);
+
+    // Новая тройка
+    const newTrioLabel = this.add
+      .text(cx, height * 0.40, 'Новая тройка целей:', {
+        fontSize: `${Math.round(15 * s)}px`,
+        color: '#aaaaaa',
+      })
+      .setOrigin(0.5)
+      .setAlpha(0);
+
+    const itemObjs: Phaser.GameObjects.Text[] = [];
+    goal.catalogIds.forEach((catalogId, i) => {
+      const entry = gameStore.getCatalogEntry(catalogId);
+      const name = entry?.name ?? catalogId;
+      const obj = this.add
+        .text(cx, height * (0.48 + i * 0.09), `• ${name}`, {
+          fontSize: `${Math.round(16 * s)}px`,
+          color: '#ffffff',
+          wordWrap: { width: cx * 2 - Math.round(48 * s) },
+          align: 'center',
+        })
+        .setOrigin(0.5)
+        .setAlpha(0);
+      itemObjs.push(obj);
+    });
+
+    // Кнопка закрытия
+    const btnY = height * 0.80;
+    const btnW = Math.round(160 * s);
+    const btnH = Math.round(44 * s);
+
+    const btnBg = this.add
+      .rectangle(cx, btnY, btnW, btnH, COLORS.PRIMARY)
+      .setInteractive({ useHandCursor: true })
+      .setAlpha(0);
+
+    const btnLabel = this.add
+      .text(cx, btnY, 'Отлично!', {
+        fontSize: `${Math.round(16 * s)}px`,
+        color: '#fff',
+      })
+      .setOrigin(0.5)
+      .setAlpha(0);
+
+    // Fade-in: заголовок сразу, остальное — с задержкой
+    this.tweens.add({ targets: titleText, alpha: 1, duration: 400 });
+    this.tweens.add({
+      targets: [completedLabel, newTrioLabel, ...itemObjs, btnBg, btnLabel],
+      alpha: 1,
+      duration: 500,
+      delay: 200,
+    });
+
+    btnBg.on('pointerup', () => this.scene.stop());
   }
 }

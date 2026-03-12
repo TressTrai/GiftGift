@@ -87,13 +87,14 @@ export function runHourlyGrant(): void {
   const now = new Date().toISOString();
   const insert = db.prepare(
     `INSERT INTO inventory
-     (instance_id, owner_id, catalog_id, type, received_at, source, hourly_notified)
-     VALUES (?, ?, ?, 'item', ?, 'hourly', 0)`,
+     (instance_id, owner_id, catalog_id, type, received_at, source, hourly_notified, result_catalog_id)
+     VALUES (?, ?, ?, 'item', ?, 'hourly', 0, ?)`,
   );
 
   const grantAll = db.transaction(() => {
     for (const user of users) {
-      insert.run(uuid(), user.id, randomCatalogId(), now);
+      const catalogId = randomCatalogId();
+      insert.run(uuid(), user.id, catalogId, now, catalogId);
     }
   });
 

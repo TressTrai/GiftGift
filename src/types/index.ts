@@ -36,6 +36,8 @@ export interface InventoryItem {
   isAnonymous?: boolean;
   message?: string;
   receivedAt: string;
+  /** catalogId, в который превратится этот предмет при передаривании. Фиксируется при получении. */
+  resultCatalogId?: string;
 }
 
 /** Нераскрытый подарок (wrap) */
@@ -88,6 +90,14 @@ export interface GameState {
   isFinale: boolean;          // true после 19:00
   /** Предметы из часовой выдачи, ещё не показанные игроку */
   newHourlyItems: InventoryItem[];
+}
+
+// ─── Результат раскрытия подарка ─────────────────────────────────────────────
+
+export interface RevealResult extends InventoryItem {
+  trioCompleted: boolean;
+  /** Новая тройка целей, если тройка только что закрыта */
+  newPersonalGoal?: PersonalGoal;
 }
 
 // ─── API типы ────────────────────────────────────────────────────────────────

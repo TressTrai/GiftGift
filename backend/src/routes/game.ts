@@ -120,9 +120,9 @@ gameRouter.post('/collect', (req: Request, res: Response) => {
     const now = new Date().toISOString();
     db.prepare(
       `INSERT INTO inventory
-       (instance_id, owner_id, catalog_id, type, received_at)
-       VALUES (?, ?, ?, 'item', ?)`,
-    ).run(instanceId, userId, item.catalog_id, now);
+       (instance_id, owner_id, catalog_id, type, received_at, result_catalog_id)
+       VALUES (?, ?, ?, 'item', ?, ?)`,
+    ).run(instanceId, userId, item.catalog_id, now, item.catalog_id);
 
     return db.prepare('SELECT * FROM scene_items').all() as SceneItemRow[];
   });
@@ -255,10 +255,12 @@ gameRouter.post('/reveal', (req: Request, res: Response) => {
     const now = new Date().toISOString();
 
     // Добавляем в инвентарь как раскрытый подарок
+    // result_catalog_id — во что превратится при передаривании (фиксируется здесь)
+    const resultCatalogId = randomCatalogIdExcluding(wrapped.catalog_id);
     db.prepare(
       `INSERT INTO inventory
-       (instance_id, owner_id, catalog_id, type, from_user_id, from_user_name, is_anonymous, message, received_at)
-       VALUES (?, ?, ?, 'gift', ?, ?, ?, ?, ?)`,
+       (instance_id, owner_id, catalog_id, type, from_user_id, from_user_name, is_anonymous, message, received_at, result_catalog_id)
+       VALUES (?, ?, ?, 'gift', ?, ?, ?, ?, ?, ?)`,
     ).run(
       instanceId,
       userId,
@@ -268,10 +270,11 @@ gameRouter.post('/reveal', (req: Request, res: Response) => {
       wrapped.is_anonymous,
       wrapped.message,
       now,
+      resultCatalogId,
     );
 
     // Проверяем личную тройку целей
-    checkPersonalGoal(userId, wrapped.catalog_id);
+    const trioCompleted = checkPersonalGoal(userId, wrapped.catalog_id);
 
     return {
       instanceId,
@@ -282,12 +285,24 @@ gameRouter.post('/reveal', (req: Request, res: Response) => {
       isAnonymous: wrapped.is_anonymous === 1,
       message: wrapped.message ?? undefined,
       receivedAt: now,
+      resultCatalogId,
+      trioCompleted,
     };
   });
 
   try {
-    const result = revealTx();
-    res.json(result);
+    const result = revealTx() as ReturnType<typeof revealTx>;
+
+    // Если тройка закрыта — добавляем новую тройку к ответу
+    let newPersonalGoal: ReturnType<typeof rowToPersonalGoal> | undefined;
+    if (result.trioCompleted) {
+      const goalRow = db
+        .prepare('SELECT * FROM personal_goals WHERE user_id = ?')
+        .get(userId) as PersonalGoalRow;
+      newPersonalGoal = rowToPersonalGoal(goalRow);
+    }
+
+    res.json({ ...result, newPersonalGoal });
   } catch (e: unknown) {
     if (e instanceof Error && e.message === 'not_found') {
       res.status(404).json({ error: 'Подарок не найден' });
@@ -299,12 +314,13 @@ gameRouter.post('/reveal', (req: Request, res: Response) => {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function checkPersonalGoal(userId: string, catalogId: string): void {
+/** Проверяет и обновляет личную тройку. Возвращает true если тройка только что закрыта. */
+function checkPersonalGoal(userId: string, catalogId: string): boolean {
   const goal = db
     .prepare('SELECT * FROM personal_goals WHERE user_id = ?')
     .get(userId) as PersonalGoalRow | undefined;
 
-  if (!goal) return;
+  if (!goal) return false;
 
   let updated = false;
 
@@ -319,7 +335,7 @@ function checkPersonalGoal(userId: string, catalogId: string): void {
     updated = true;
   }
 
-  if (!updated) return;
+  if (!updated) return false;
 
   // Проверяем завершение тройки
   const fresh = db
@@ -338,7 +354,10 @@ function checkPersonalGoal(userId: string, catalogId: string): void {
        completed_count = completed_count + 1
        WHERE user_id = ?`,
     ).run(a, b, c, userId);
+    return true;
   }
+
+  return false;
 }
 
 function createAndReturnGoal(userId: string) {
@@ -377,6 +396,7 @@ interface InventoryRow {
   received_at: string;
   source?: string;
   hourly_notified?: number;
+  result_catalog_id?: string | null;
 }
 
 interface WrappedGiftRow {
@@ -424,7 +444,17 @@ function rowToInventoryItem(r: InventoryRow) {
     isAnonymous: r.is_anonymous === 1,
     message: r.message ?? undefined,
     receivedAt: r.received_at,
+    resultCatalogId: r.result_catalog_id ?? r.catalog_id,
   };
+}
+
+function randomCatalogIdExcluding(excludeId: string): string {
+  let id: string;
+  do {
+    const n = Math.floor(Math.random() * 50) + 1;
+    id = `gift-${n}`;
+  } while (id === excludeId);
+  return id;
 }
 
 function rowToWrappedGift(r: WrappedGiftRow) {

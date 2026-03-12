@@ -30,22 +30,34 @@ export class ProfileScene extends Phaser.Scene {
 
     // Имя игрока
     this.add
-      .text(cx, Math.round(100 * s), gameStore.user.name, {
+      .text(cx, Math.round(90 * s), gameStore.user.name, {
         fontSize: `${Math.round(24 * s)}px`,
         fontStyle: 'bold',
         color: '#ffb347',
       })
       .setOrigin(0.5);
 
-    this.createButton(cx, Math.round(170 * s), Math.round(260 * s), Math.round(44 * s), s,
+    // Количество закрытых троек
+    const completed = gameStore.personalGoal.completedCount;
+    const triLabel = completed === 0
+      ? 'Троек целей закрыто: 0'
+      : `Троек целей закрыто: ${completed} 🎯`;
+    this.add
+      .text(cx, Math.round(128 * s), triLabel, {
+        fontSize: `${Math.round(14 * s)}px`,
+        color: completed > 0 ? '#4caf50' : '#888888',
+      })
+      .setOrigin(0.5);
+
+    this.createButton(cx, Math.round(190 * s), Math.round(260 * s), Math.round(44 * s), s,
       'Изменить имя', () => this.openChangeName(s));
-    this.createButton(cx, Math.round(240 * s), Math.round(260 * s), Math.round(44 * s), s,
+    this.createButton(cx, Math.round(260 * s), Math.round(260 * s), Math.round(44 * s), s,
       'Изменить пароль', () => this.openChangePassword(s));
 
     // Разделитель
-    this.add.line(cx, Math.round(296 * s), 0, 0, width - Math.round(64 * s), 0, 0x333355).setOrigin(0.5);
+    this.add.line(cx, Math.round(316 * s), 0, 0, width - Math.round(64 * s), 0, 0x333355).setOrigin(0.5);
 
-    this.createButton(cx, Math.round(330 * s), Math.round(260 * s), Math.round(44 * s), s,
+    this.createButton(cx, Math.round(350 * s), Math.round(260 * s), Math.round(44 * s), s,
       'Как играть', () => {
         this.scene.stop(SCENE_KEYS.UI);
         this.scene.stop(SCENE_KEYS.GAME);
@@ -55,7 +67,7 @@ export class ProfileScene extends Phaser.Scene {
     // Переключатель звука
     const soundOn = isSoundEnabled();
     const soundLabel = this.add
-      .text(cx, Math.round(400 * s), `Звуки: ${soundOn ? 'ВКЛ' : 'ВЫКЛ'}`, {
+      .text(cx, Math.round(420 * s), `Звуки: ${soundOn ? 'ВКЛ' : 'ВЫКЛ'}`, {
         fontSize: `${Math.round(16 * s)}px`,
         color: soundOn ? '#4caf50' : '#888888',
       })

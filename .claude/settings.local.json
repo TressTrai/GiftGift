@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /d/Git/GiftGift && npx tsc --noEmit 2>&1)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

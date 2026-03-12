@@ -1,5 +1,5 @@
 import { api } from './client';
-import { GameState, GiftPayload, InventoryItem, SceneItem } from '../types';
+import { GameState, GiftPayload, InventoryItem, RevealResult, SceneItem } from '../types';
 
 /** Полная синхронизация при заходе */
 export function fetchState(): Promise<GameState> {
@@ -17,6 +17,6 @@ export function sendGift(payload: GiftPayload): Promise<InventoryItem> {
 }
 
 /** Раскрыть нераскрытый подарок */
-export function revealGift(instanceId: string): Promise<InventoryItem> {
-  return api.post<InventoryItem>('/game/reveal', { instanceId });
+export function revealGift(instanceId: string): Promise<RevealResult> {
+  return api.post<RevealResult>('/game/reveal', { instanceId });
 }

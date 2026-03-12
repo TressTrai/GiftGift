@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS, MESSAGE_MAX_LENGTH, CATALOG_SIZE, EVENTS } from '../utils/constants';
+import { SCENE_KEYS, MESSAGE_MAX_LENGTH, EVENTS } from '../utils/constants';
 import { EventBus } from '../utils/eventBus';
 import { gameStore } from '../store/GameStore';
 import { sendGift } from '../api/game';
@@ -26,10 +26,8 @@ export class GiftingScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const { item } = data;
 
-    // Для подарка: случайный resultCatalogId (не совпадает с текущим), фиксируется при открытии
-    const resultCatalogId = item.type === 'gift'
-      ? this.pickRandomCatalogId(item.catalogId)
-      : item.catalogId;
+    // resultCatalogId фиксируется на сервере в момент получения предмета
+    const resultCatalogId = item.resultCatalogId ?? item.catalogId;
 
     this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0).setInteractive();
 
@@ -88,15 +86,6 @@ export class GiftingScene extends Phaser.Scene {
         }
       }
     });
-  }
-
-  private pickRandomCatalogId(excludeId: string): string {
-    let id: string;
-    do {
-      const n = Math.floor(Math.random() * CATALOG_SIZE) + 1;
-      id = `gift-${n}`;
-    } while (id === excludeId);
-    return id;
   }
 
   private buildFormHTML(item: InventoryItem, resultCatalogId: string, width: number, height: number): string {

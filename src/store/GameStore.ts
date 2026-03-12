@@ -1,4 +1,4 @@
-import { CatalogEntry, GameState, InventoryItem, SceneItem, WrappedGift } from '../types';
+import { CatalogEntry, GameState, InventoryItem, RevealResult, SceneItem, WrappedGift } from '../types';
 import { EventBus } from '../utils/eventBus';
 import { EVENTS } from '../utils/constants';
 
@@ -96,24 +96,29 @@ class GameStore {
     EventBus.emit(EVENTS.COLLECTIVE_PROGRESS, state.collectiveGoal);
   }
 
-  applyGiftRevealed(instanceId: string, revealedItem: InventoryItem): void {
+  /** Возвращает true если в результате раскрытия закрылась тройка */
+  applyGiftRevealed(instanceId: string, result: RevealResult): boolean {
     const state = this.get();
     state.wrappedGifts = state.wrappedGifts.filter(g => g.instanceId !== instanceId);
-    state.inventory.push(revealedItem);
+    state.inventory.push(result);
 
-    // Проверяем личную тройку целей
-    const goal = state.personalGoal;
-    const idx = goal.catalogIds.indexOf(revealedItem.catalogId);
-    if (idx !== -1 && !goal.collected[idx]) {
-      goal.collected[idx] = true;
-      if (goal.collected.every(Boolean)) {
-        goal.completedCount += 1;
-        EventBus.emit(EVENTS.TRIO_COMPLETED);
-        // Сервер пришлёт новую тройку при следующей синхронизации
+    if (result.trioCompleted) {
+      // Тройка закрыта — заменяем на новую тройку с сервера
+      if (result.newPersonalGoal) {
+        state.personalGoal = result.newPersonalGoal;
+      }
+      EventBus.emit(EVENTS.TRIO_COMPLETED);
+    } else {
+      // Отмечаем отдельный элемент тройки если совпадает
+      const goal = state.personalGoal;
+      const idx = goal.catalogIds.indexOf(result.catalogId);
+      if (idx !== -1 && !goal.collected[idx]) {
+        goal.collected[idx] = true;
       }
     }
 
-    EventBus.emit(EVENTS.GIFT_REVEALED, revealedItem);
+    EventBus.emit(EVENTS.GIFT_REVEALED, result);
+    return result.trioCompleted;
   }
 
   applyNewWrappedGifts(gifts: WrappedGift[]): void {

@@ -138,6 +138,7 @@ export class UIScene extends Phaser.Scene {
   private subscribeToEvents(): void {
     EventBus.on(EVENTS.NEW_GIFTS_RECEIVED, () => this.updateBadge());
     EventBus.on(EVENTS.GIFT_REVEALED, () => this.updateBadge());
+    EventBus.on(EVENTS.STATE_SYNCED, () => this.updateBadge());
     EventBus.on(EVENTS.HOURLY_ITEMS_RECEIVED, (items: InventoryItem[]) => {
       this.showHourlyGrant(items);
     });
