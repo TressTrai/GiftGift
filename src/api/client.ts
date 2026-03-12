@@ -21,7 +21,9 @@ async function request<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error ?? 'Network error');
+    const error = new Error(err.error ?? 'Network error') as Error & { status: number };
+    error.status = res.status;
+    throw error;
   }
 
   return res.json() as Promise<T>;

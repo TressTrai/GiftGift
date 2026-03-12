@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS, EVENTS, SPAWN_POINTS, SCENE_WIDTH, SCENE_HEIGHT, COLLECTIVE_VISUAL_STEPS, PROGRESS_POSITIONS } from '../utils/constants';
+import { SCENE_KEYS, EVENTS, SPAWN_POINTS, SCENE_WIDTH, SCENE_HEIGHT, COLLECTIVE_VISUAL_STEPS, PROGRESS_POSITIONS, PROGRESS_IMAGES, COLORS } from '../utils/constants';
 import { EventBus } from '../utils/eventBus';
 import { gameStore } from '../store/GameStore';
 import { collectItem } from '../api/game';
@@ -15,6 +15,7 @@ import { syncSystem } from '../systems/SyncSystem';
 export class GameScene extends Phaser.Scene {
   private itemSprites: Map<string, Phaser.GameObjects.Image> = new Map();
   private progressElements: Phaser.GameObjects.Image[] = [];
+  private collectingIds: Set<string> = new Set();
 
   // Pan/zoom
   private isDragging = false;
@@ -28,6 +29,7 @@ export class GameScene extends Phaser.Scene {
     // Сбрасываем состояние при каждом запуске (Phaser переиспользует экземпляр)
     this.itemSprites.clear();
     this.progressElements = [];
+    this.collectingIds.clear();
 
     // Большая сцена (2160×4800), камера свободно перемещается
     this.cameras.main.setBounds(0, 0, SCENE_WIDTH, SCENE_HEIGHT);
@@ -54,9 +56,9 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    // Добавляем новые
+    // Добавляем новые (пропускаем те что сейчас в процессе сбора)
     items.forEach(item => {
-      if (!this.itemSprites.has(item.instanceId)) {
+      if (!this.itemSprites.has(item.instanceId) && !this.collectingIds.has(item.instanceId)) {
         this.spawnItemSprite(item);
       }
     });
@@ -88,12 +90,14 @@ export class GameScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
-    sprite.on('pointerup', () => this.handleCollect(item.instanceId, sprite));
+    sprite.once('pointerup', () => this.handleCollect(item.instanceId, sprite));
 
     this.itemSprites.set(item.instanceId, sprite);
   }
 
   private async handleCollect(instanceId: string, sprite: Phaser.GameObjects.Image): Promise<void> {
+    if (this.collectingIds.has(instanceId)) return;
+    this.collectingIds.add(instanceId);
     sprite.disableInteractive();
 
     // Запоминаем catalogId до API-запроса — после него предмет уйдёт из sceneItems
@@ -101,6 +105,11 @@ export class GameScene extends Phaser.Scene {
 
     try {
       const newSceneItems = await collectItem(instanceId);
+
+      // Удаляем из Map ДО emit-а события — иначе renderSceneItems уничтожит спрайт
+      this.itemSprites.delete(instanceId);
+      this.collectingIds.delete(instanceId);
+
       gameStore.applySceneItemsUpdate(newSceneItems);
 
       // Добавляем предмет в инвентарь
@@ -114,23 +123,52 @@ export class GameScene extends Phaser.Scene {
         gameStore.applyItemCollected(instanceId, inventoryItem);
       }
 
-      // Анимация сбора
+      // Партиклы и анимация сбора
+      this.spawnCollectParticles(sprite.x, sprite.y);
       this.tweens.add({
         targets: sprite,
         alpha: 0,
-        scaleX: 1.5,
-        scaleY: 1.5,
-        duration: 250,
+        scaleX: sprite.scaleX * 1.15,
+        scaleY: sprite.scaleY * 1.15,
+        duration: 300,
+        ease: 'Power1',
         onComplete: () => sprite.destroy(),
       });
-      this.itemSprites.delete(instanceId);
       if (this.cache.audio.exists('sfx-collect')) this.sound.play('sfx-collect', { volume: 0.6 });
-    } catch {
-      // Race condition — предмет уже собран кем-то другим
-      this.showRaceConditionFeedback(sprite.x, sprite.y);
+    } catch (e: unknown) {
+      this.itemSprites.delete(instanceId);
+      this.collectingIds.delete(instanceId);
+
+      const status = (e as { status?: number }).status;
+      if (status === 409) {
+        // Настоящий race condition — предмет уже собран другим игроком
+        this.showRaceConditionFeedback(sprite.x, sprite.y);
+      }
+      // При любой другой ошибке — тихо убираем спрайт
       sprite.setAlpha(0.3);
       this.time.delayedCall(600, () => sprite.destroy());
-      this.itemSprites.delete(instanceId);
+    }
+  }
+
+  private spawnCollectParticles(x: number, y: number): void {
+    const colors = [COLORS.ACCENT_WARM, COLORS.ACCENT_PINK, COLORS.ACCENT_BLUE, COLORS.SUCCESS];
+    const s = this.scale.width / 390;
+    const r = Math.round(10 * s);
+    const dist = Math.round(80 * s);
+
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2;
+      const color = colors[i % colors.length];
+      const p = this.add.circle(x, y, r, color);
+      this.tweens.add({
+        targets: p,
+        x: x + Math.cos(angle) * dist,
+        y: y + Math.sin(angle) * dist,
+        alpha: 0,
+        duration: 600,
+        ease: 'Power1',
+        onComplete: () => p.destroy(),
+      });
     }
   }
 
@@ -169,7 +207,7 @@ export class GameScene extends Phaser.Scene {
       const img = this.add.image(
         pos.x * SCENE_WIDTH,
         pos.y * SCENE_HEIGHT,
-        `progress-el-${idx + 1}`,
+        PROGRESS_IMAGES[idx],
       ).setAlpha(0);
 
       this.tweens.add({ targets: img, alpha: 1, duration: 600 });
