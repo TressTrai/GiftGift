@@ -41,12 +41,6 @@ export class BootScene extends Phaser.Scene {
       this.load.image(`progress-el-${i}`, `assets/images/scene/progress-el-${i}.png`);
     }
 
-    // Звуки
-    this.load.audio('sfx-collect', 'assets/audio/collect.mp3');
-    this.load.audio('sfx-reveal', 'assets/audio/reveal.mp3');
-    this.load.audio('sfx-gift-sent', 'assets/audio/gift-sent.mp3');
-    this.load.audio('sfx-trio', 'assets/audio/trio-complete.mp3');
-    this.load.audio('sfx-finale', 'assets/audio/finale.mp3');
   }
 
   create(): void {

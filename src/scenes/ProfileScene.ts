@@ -1,8 +1,7 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS, COLORS, PASSWORD_MIN_LENGTH } from '../utils/constants';
-import { updateName, updatePassword } from '../api/auth';
+import { SCENE_KEYS, COLORS } from '../utils/constants';
+import { updateName } from '../api/auth';
 import { gameStore } from '../store/GameStore';
-import { isSoundEnabled, setSoundEnabled } from '../utils/storage';
 
 /**
  * ProfileScene — Tab 3: Профиль.
@@ -51,9 +50,6 @@ export class ProfileScene extends Phaser.Scene {
 
     this.createButton(cx, Math.round(190 * s), Math.round(260 * s), Math.round(44 * s), s,
       'Изменить имя', () => this.openChangeName(s));
-    this.createButton(cx, Math.round(260 * s), Math.round(260 * s), Math.round(44 * s), s,
-      'Изменить пароль', () => this.openChangePassword(s));
-
     // Разделитель
     this.add.line(cx, Math.round(316 * s), 0, 0, width - Math.round(64 * s), 0, 0x333355).setOrigin(0.5);
 
@@ -64,22 +60,6 @@ export class ProfileScene extends Phaser.Scene {
         this.scene.start(SCENE_KEYS.TUTORIAL);
       });
 
-    // Переключатель звука
-    const soundOn = isSoundEnabled();
-    const soundLabel = this.add
-      .text(cx, Math.round(420 * s), `Звуки: ${soundOn ? 'ВКЛ' : 'ВЫКЛ'}`, {
-        fontSize: `${Math.round(16 * s)}px`,
-        color: soundOn ? '#4caf50' : '#888888',
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
-
-    soundLabel.on('pointerup', () => {
-      const current = isSoundEnabled();
-      setSoundEnabled(!current);
-      soundLabel.setText(`Звуки: ${!current ? 'ВКЛ' : 'ВЫКЛ'}`);
-      soundLabel.setColor(!current ? '#4caf50' : '#888888');
-    });
   }
 
   private createButton(
@@ -146,59 +126,4 @@ export class ProfileScene extends Phaser.Scene {
     });
   }
 
-  private openChangePassword(s: number): void {
-    const formW = Math.round(280 * s);
-    const pad   = Math.round(24 * s);
-    const fnt   = Math.round(16 * s);
-    const bfnt  = Math.round(15 * s);
-    const efnt  = Math.round(13 * s);
-
-    const dom = this.add.dom(this.scale.width / 2, this.scale.height / 2).createFromHTML(`
-      <div style="background:#1e1e36;padding:${pad}px;border-radius:${Math.round(12*s)}px;
-                  width:${formW}px;text-align:center">
-        <p style="color:#fff;margin-bottom:${Math.round(8*s)}px;font-size:${fnt}px">Старый пароль:</p>
-        <input id="oldPwd" type="password" maxlength="50"
-          style="width:100%;padding:${Math.round(10*s)}px;border-radius:${Math.round(6*s)}px;
-                 border:none;font-size:${fnt}px;background:#2a2a4e;color:#fff;text-align:center;
-                 box-sizing:border-box" />
-        <p style="color:#fff;margin:${Math.round(8*s)}px 0;font-size:${fnt}px">
-          Новый пароль (мин. ${PASSWORD_MIN_LENGTH}):
-        </p>
-        <input id="newPwd" type="password" maxlength="50"
-          style="width:100%;padding:${Math.round(10*s)}px;border-radius:${Math.round(6*s)}px;
-                 border:none;font-size:${fnt}px;background:#2a2a4e;color:#fff;text-align:center;
-                 box-sizing:border-box" />
-        <p id="errMsg" style="color:#ff6b6b;font-size:${efnt}px;margin:${Math.round(6*s)}px 0;
-                               min-height:${Math.round(18*s)}px"></p>
-        <button id="saveBtn"
-          style="background:#7b68ee;color:#fff;border:none;padding:${Math.round(10*s)}px ${Math.round(24*s)}px;
-                 border-radius:${Math.round(6*s)}px;font-size:${bfnt}px;cursor:pointer">
-          Сохранить
-        </button>
-        <button id="cancelBtn"
-          style="background:#333;color:#aaa;border:none;padding:${Math.round(10*s)}px ${Math.round(24*s)}px;
-                 border-radius:${Math.round(6*s)}px;font-size:${bfnt}px;cursor:pointer;
-                 margin-left:${Math.round(8*s)}px">
-          Отмена
-        </button>
-      </div>
-    `);
-
-    dom.addListener('click');
-    dom.on('click', async (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.id === 'cancelBtn') { dom.destroy(); return; }
-      if (target.id === 'saveBtn') {
-        const oldPwd = (dom.getChildByID('oldPwd') as HTMLInputElement).value;
-        const newPwd = (dom.getChildByID('newPwd') as HTMLInputElement).value;
-        const err = dom.getChildByID('errMsg') as HTMLElement;
-        if (newPwd.length < PASSWORD_MIN_LENGTH) {
-          err.textContent = `Минимум ${PASSWORD_MIN_LENGTH} символа`;
-          return;
-        }
-        await updatePassword(oldPwd, newPwd).catch(ex => { err.textContent = ex.message; });
-        dom.destroy();
-      }
-    });
-  }
 }
