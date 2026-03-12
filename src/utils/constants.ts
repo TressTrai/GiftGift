@@ -22,12 +22,13 @@ export const SPAWN_POINTS: { x: number; y: number }[] = [
   { x: 0.38, y: 0.50 },
 ];
 
-export const SCENE_WIDTH = 1600;            // px ширина иллюстрации
-export const SCENE_HEIGHT = 1200;           // px высота иллюстрации
+export const SCENE_WIDTH = 2160;            // px ширина иллюстрации (2× холста 1080)
+export const SCENE_HEIGHT = 4800;           // px высота иллюстрации (2× холста 2400)
 
 // ─── Экономика ───────────────────────────────────────────────────────────────
 
 export const SPAWN_INTERVAL_MS = 10 * 60 * 1000; // 10 минут
+export const HOURLY_GRANT_INTERVAL_MS = 60 * 60 * 1000; // 1 час
 export const SPAWN_COUNT = 4;               // предметов за респавн
 export const CATALOG_SIZE = 50;
 
@@ -58,6 +59,7 @@ export const SCENE_KEYS = {
   GIFTING: 'GiftingScene',
   REVEAL: 'RevealScene',
   FINALE: 'FinaleScene',
+  HOURLY_GRANT: 'HourlyGrantScene',
 } as const;
 
 // ─── Ключи событий (EventBus) ────────────────────────────────────────────────
@@ -83,6 +85,9 @@ export const EVENTS = {
 
   // Финал
   FINALE_TRIGGERED: 'finale:triggered',
+
+  // Часовая выдача
+  HOURLY_ITEMS_RECEIVED: 'hourly:items-received',
 } as const;
 
 // ─── Цвета ───────────────────────────────────────────────────────────────────

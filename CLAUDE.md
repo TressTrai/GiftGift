@@ -72,9 +72,9 @@ npm run dev
 ├── public/assets/
 │   ├── catalog.json             # 50 подарков: id, name, description, imageKey
 │   ├── images/
-│   │   ├── scene/background.jpg          # 1600×1200
+│   │   ├── scene/background.jpg          # 2160×4800 (2× холста 1080×2400, pan/zoom)
 │   │   ├── scene/progress-el-1..12.png   # элементы коллективного прогресса
-│   │   ├── gifts/gift-1..gift-50.png     # 256×256, прозрачный фон
+│   │   ├── gifts/gift-1..gift-50.png     # 512×512, прозрачный фон
 │   │   └── ui/wrapped-gift.png, icon-*.png, particle.png
 │   └── audio/collect.mp3, reveal.mp3, gift-sent.mp3, trio-complete.mp3, finale.mp3
 │

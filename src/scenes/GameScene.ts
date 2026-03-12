@@ -3,7 +3,8 @@ import { SCENE_KEYS, EVENTS, SPAWN_POINTS, SCENE_WIDTH, SCENE_HEIGHT, COLLECTIVE
 import { EventBus } from '../utils/eventBus';
 import { gameStore } from '../store/GameStore';
 import { collectItem } from '../api/game';
-import { SceneItem, CollectiveGoal, InventoryItem } from '../types';
+import { SceneItem, CollectiveGoal, InventoryItem, GameState } from '../types';
+import { syncSystem } from '../systems/SyncSystem';
 
 /**
  * GameScene — Tab 1: интерактивная сцена.
@@ -24,7 +25,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    // Большая сцена (1600×1200), камера свободно перемещается
+    // Сбрасываем состояние при каждом запуске (Phaser переиспользует экземпляр)
+    this.itemSprites.clear();
+    this.progressElements = [];
+
+    // Большая сцена (2160×4800), камера свободно перемещается
     this.cameras.main.setBounds(0, 0, SCENE_WIDTH, SCENE_HEIGHT);
 
     this.add.image(0, 0, 'scene-bg').setOrigin(0);
@@ -34,6 +39,7 @@ export class GameScene extends Phaser.Scene {
 
     this.setupPanZoom();
     this.subscribeToEvents();
+    syncSystem.start();
   }
 
   // ─── Рендер предметов ─────────────────────────────────────────────────────
@@ -70,12 +76,13 @@ export class GameScene extends Phaser.Scene {
       .setDisplaySize(spriteSize, spriteSize)
       .setInteractive({ useHandCursor: true });
 
-    // Лёгкое свечение / пульсация чтобы отличались от декора
+    // Лёгкая пульсация относительно текущего масштаба (+3%)
+    const baseScale = sprite.scaleX;
     this.tweens.add({
       targets: sprite,
-      scaleX: 1.08,
-      scaleY: 1.08,
-      duration: 900,
+      scaleX: baseScale * 1.09,
+      scaleY: baseScale * 1.09,
+      duration: 1600,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
@@ -173,6 +180,9 @@ export class GameScene extends Phaser.Scene {
 
   private setupPanZoom(): void {
     const cam = this.cameras.main;
+    // zoom=1.0 → видна ровно половина сцены (1080×2400 из 2160×4800)
+    const MIN_ZOOM = 1.0;
+    const MAX_ZOOM = 2.5;
     let pinchDist = 0;
 
     // Регистрируем второй указатель для мультитач
@@ -181,52 +191,54 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
       const p2 = this.input.pointer2;
       if (p2.isDown) {
-        // Второй палец опустился — начинаем pinch, отменяем pan
+        // Второй палец — начинаем pinch, отменяем pan
         this.isDragging = false;
         pinchDist = Phaser.Math.Distance.Between(
           this.input.pointer1.x, this.input.pointer1.y,
           p2.x, p2.y,
         );
       } else {
-        // Один палец — pan
+        // Один указатель (палец или мышь) — pan
         this.isDragging = true;
         this.dragStart = { x: ptr.x, y: ptr.y, camX: cam.scrollX, camY: cam.scrollY };
       }
     });
 
-    this.input.on('pointermove', () => {
+    // ptr — указатель, который двигается (мышь или палец)
+    this.input.on('pointermove', (ptr: Phaser.Input.Pointer) => {
       const p1 = this.input.pointer1;
       const p2 = this.input.pointer2;
 
       if (p1.isDown && p2.isDown) {
-        // Pinch zoom
+        // Pinch zoom (два пальца)
         const newDist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
         if (pinchDist > 0) {
-          cam.zoom = Phaser.Math.Clamp(cam.zoom * (newDist / pinchDist), 0.4, 2.0);
+          cam.zoom = Phaser.Math.Clamp(cam.zoom * (newDist / pinchDist), MIN_ZOOM, MAX_ZOOM);
         }
         pinchDist = newDist;
-      } else if (this.isDragging && p1.isDown) {
-        cam.scrollX = this.dragStart.camX - (p1.x - this.dragStart.x);
-        cam.scrollY = this.dragStart.camY - (p1.y - this.dragStart.y);
+      } else if (this.isDragging && ptr.isDown) {
+        // Pan — делим на zoom чтобы скорость не зависела от масштаба
+        cam.scrollX = this.dragStart.camX - (ptr.x - this.dragStart.x) / cam.zoom;
+        cam.scrollY = this.dragStart.camY - (ptr.y - this.dragStart.y) / cam.zoom;
       }
     });
 
-    this.input.on('pointerup', () => {
+    this.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
       pinchDist = 0;
       const p1 = this.input.pointer1;
       const p2 = this.input.pointer2;
-      // Один палец остался — переходим обратно в pan
       if (p1.isDown && !p2.isDown) {
+        // Один палец остался после pinch — переходим обратно в pan
         this.isDragging = true;
         this.dragStart = { x: p1.x, y: p1.y, camX: cam.scrollX, camY: cam.scrollY };
-      } else if (!p1.isDown) {
+      } else if (!ptr.isDown && !p1.isDown) {
         this.isDragging = false;
       }
     });
 
-    // Колёсико мыши — для десктопа
+    // Колёсико мыши
     this.input.on('wheel', (_ptr: Phaser.Input.Pointer, _objs: unknown, _dx: number, dy: number) => {
-      cam.zoom = Phaser.Math.Clamp(cam.zoom - dy * 0.001, 0.4, 2.0);
+      cam.zoom = Phaser.Math.Clamp(cam.zoom - dy * 0.001, MIN_ZOOM, MAX_ZOOM);
     });
   }
 
@@ -236,15 +248,22 @@ export class GameScene extends Phaser.Scene {
     const onItemsUpdated = (items: SceneItem[]) => this.renderSceneItems(items);
     const onProgress = (goal: CollectiveGoal) => this.updateCollectiveVisuals(goal);
     const onFinale = () => this.scene.launch(SCENE_KEYS.FINALE);
+    const onStateSynced = (state: GameState) => {
+      this.renderSceneItems(state.sceneItems);
+      this.updateCollectiveVisuals(state.collectiveGoal);
+    };
 
     EventBus.on(EVENTS.SCENE_ITEMS_UPDATED, onItemsUpdated);
     EventBus.on(EVENTS.COLLECTIVE_PROGRESS, onProgress);
     EventBus.on(EVENTS.FINALE_TRIGGERED, onFinale);
+    EventBus.on(EVENTS.STATE_SYNCED, onStateSynced);
 
     this.events.once('shutdown', () => {
       EventBus.off(EVENTS.SCENE_ITEMS_UPDATED, onItemsUpdated);
       EventBus.off(EVENTS.COLLECTIVE_PROGRESS, onProgress);
       EventBus.off(EVENTS.FINALE_TRIGGERED, onFinale);
+      EventBus.off(EVENTS.STATE_SYNCED, onStateSynced);
+      syncSystem.stop();
     });
   }
 

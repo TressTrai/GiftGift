@@ -135,7 +135,11 @@ export class TutorialScene extends Phaser.Scene {
 
   private startGame(): void {
     markTutorialSeen();
-    this.scene.start(SCENE_KEYS.GAME);
-    this.scene.start(SCENE_KEYS.UI);
+    // Останавливаем вторичные сцены на случай если остались
+    [SCENE_KEYS.PROFILE, SCENE_KEYS.INVENTORY, SCENE_KEYS.UI].forEach(key => {
+      if (this.scene.isActive(key)) this.scene.stop(key);
+    });
+    this.scene.start(SCENE_KEYS.GAME);   // останавливает Tutorial, запускает Game
+    this.scene.launch(SCENE_KEYS.UI);    // запускает UI свежим поверх Game
   }
 }

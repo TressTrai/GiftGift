@@ -86,6 +86,8 @@ export interface GameState {
   collectiveGoal: CollectiveGoal;
   allUsers: User[];           // список всех зарегистрировавшихся (для дарения)
   isFinale: boolean;          // true после 19:00
+  /** Предметы из часовой выдачи, ещё не показанные игроку */
+  newHourlyItems: InventoryItem[];
 }
 
 // ─── API типы ────────────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ import { EVENTS } from '../utils/constants';
 class GameStore {
   private state: GameState | null = null;
   private catalogMap: Map<string, CatalogEntry> = new Map();
+  private _pendingHourlyItems: InventoryItem[] = [];
 
   /** Загружается один раз из catalog.json в BootScene */
   initCatalog(entries: CatalogEntry[]): void {
@@ -25,6 +26,19 @@ class GameStore {
   init(state: GameState): void {
     this.state = state;
     EventBus.emit(EVENTS.STATE_SYNCED, state);
+
+    if (state.newHourlyItems && state.newHourlyItems.length > 0) {
+      this._pendingHourlyItems = state.newHourlyItems;
+      EventBus.emit(EVENTS.HOURLY_ITEMS_RECEIVED, state.newHourlyItems);
+    }
+  }
+
+  get pendingHourlyItems(): InventoryItem[] {
+    return this._pendingHourlyItems;
+  }
+
+  clearPendingHourlyItems(): void {
+    this._pendingHourlyItems = [];
   }
 
   get(): GameState {

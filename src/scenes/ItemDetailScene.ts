@@ -113,5 +113,10 @@ export class ItemDetailScene extends Phaser.Scene {
         ptr.y < cardY || ptr.y > cardY + cardH;
       if (outsideCard) this.scene.stop();
     });
+
+    // Закрытие при переключении вкладки
+    const onTabChanged = () => this.scene.stop();
+    EventBus.on(EVENTS.TAB_CHANGED, onTabChanged);
+    this.events.once('shutdown', () => EventBus.off(EVENTS.TAB_CHANGED, onTabChanged));
   }
 }

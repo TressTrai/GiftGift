@@ -77,11 +77,38 @@ function recalculateGoal(): void {
   console.log(`[goal] Recalculated target: ${newTarget} (gifted so far: ${goal.current})`);
 }
 
+const HOURLY_GRANT_INTERVAL_MS = 1 * 60 * 1000; // 1 час
+
+/** Выдаёт каждому зарегистрированному пользователю 1 предмет в инвентарь */
+export function runHourlyGrant(): void {
+  const users = db.prepare('SELECT id FROM users').all() as { id: string }[];
+  if (users.length === 0) return;
+
+  const now = new Date().toISOString();
+  const insert = db.prepare(
+    `INSERT INTO inventory
+     (instance_id, owner_id, catalog_id, type, received_at, source, hourly_notified)
+     VALUES (?, ?, ?, 'item', ?, 'hourly', 0)`,
+  );
+
+  const grantAll = db.transaction(() => {
+    for (const user of users) {
+      insert.run(uuid(), user.id, randomCatalogId(), now);
+    }
+  });
+
+  grantAll();
+  console.log(`[hourly] Granted 1 item to ${users.length} users`);
+}
+
 /** Запускает таймеры респавна и пересчёта цели */
 export function startTimers(): void {
   // Первый респавн сразу при старте сервера
   runRespawn();
   setInterval(runRespawn, SPAWN_INTERVAL_MS);
+
+  // Выдача предметов раз в час
+  setInterval(runHourlyGrant, HOURLY_GRANT_INTERVAL_MS);
 
   // Пересчёт цели в 12:00, 15:00, 17:00
   scheduleGoalRecalcs();

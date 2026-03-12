@@ -47,6 +47,8 @@ export class ProfileScene extends Phaser.Scene {
 
     this.createButton(cx, Math.round(330 * s), Math.round(260 * s), Math.round(44 * s), s,
       'Как играть', () => {
+        this.scene.stop(SCENE_KEYS.UI);
+        this.scene.stop(SCENE_KEYS.GAME);
         this.scene.start(SCENE_KEYS.TUTORIAL);
       });
 

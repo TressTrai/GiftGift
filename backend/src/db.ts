@@ -71,6 +71,15 @@ db.exec(`
   );
 `);
 
+// Миграции: добавляем колонки если их ещё нет
+try {
+  db.exec(`ALTER TABLE inventory ADD COLUMN source TEXT NOT NULL DEFAULT 'scene'`);
+} catch { /* колонка уже есть */ }
+
+try {
+  db.exec(`ALTER TABLE inventory ADD COLUMN hourly_notified INTEGER NOT NULL DEFAULT 0`);
+} catch { /* колонка уже есть */ }
+
 // Инициализация коллективной цели если её ещё нет
 const goalExists = db
   .prepare('SELECT id FROM collective_goal WHERE id = 1')

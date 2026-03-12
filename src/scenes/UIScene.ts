@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { SCENE_KEYS, COLORS, EVENTS } from '../utils/constants';
 import { EventBus } from '../utils/eventBus';
 import { gameStore } from '../store/GameStore';
+import { InventoryItem } from '../types';
 
 type Tab = 'game' | 'inventory' | 'profile';
 
@@ -23,6 +24,9 @@ export class UIScene extends Phaser.Scene {
 
   create(): void {
     const { width, height } = this.scale;
+    this.activeTab = 'game'; // сбрасываем при каждом запуске сцены
+    this.tabIcons.clear();
+    this.tabLabels.clear();
     this.createTabBar(width, height);
     this.updateBadge();
     this.subscribeToEvents();
@@ -134,5 +138,18 @@ export class UIScene extends Phaser.Scene {
   private subscribeToEvents(): void {
     EventBus.on(EVENTS.NEW_GIFTS_RECEIVED, () => this.updateBadge());
     EventBus.on(EVENTS.GIFT_REVEALED, () => this.updateBadge());
+    EventBus.on(EVENTS.HOURLY_ITEMS_RECEIVED, (items: InventoryItem[]) => {
+      this.showHourlyGrant(items);
+    });
+
+    // Предметы могли прийти в BootScene до старта UIScene — показываем сразу
+    if (gameStore.pendingHourlyItems.length > 0) {
+      this.showHourlyGrant(gameStore.pendingHourlyItems);
+    }
+  }
+
+  private showHourlyGrant(items: InventoryItem[]): void {
+    this.scene.launch(SCENE_KEYS.HOURLY_GRANT, { items });
+    this.scene.bringToTop(SCENE_KEYS.HOURLY_GRANT);
   }
 }

@@ -12,6 +12,9 @@ import { InventoryItem, WrappedGift } from '../types';
  *   3. Мой инвентарь (предметы + подарки)
  */
 export class InventoryScene extends Phaser.Scene {
+  /** true если пользователь листал (а не просто тапнул) */
+  private didScroll = false;
+
   constructor() {
     super({ key: SCENE_KEYS.INVENTORY });
   }
@@ -159,7 +162,8 @@ export class InventoryScene extends Phaser.Scene {
         .image(x + CARD_SIZE / 2, y + CARD_SIZE / 2, 'wrapped-gift')
         .setDisplaySize(imgSize, imgSize);
 
-      bg.on('pointerup', () => {
+      bg.on('pointerup', (ptr: Phaser.Input.Pointer) => {
+        if (this.didScroll || this.isTabBarArea(ptr.y)) return;
         this.scene.launch(SCENE_KEYS.REVEAL, { instanceId: g.instanceId });
       });
     });
@@ -218,7 +222,8 @@ export class InventoryScene extends Phaser.Scene {
         })
         .setOrigin(0.5, 0);
 
-      bg.on('pointerup', () => {
+      bg.on('pointerup', (ptr: Phaser.Input.Pointer) => {
+        if (this.didScroll || this.isTabBarArea(ptr.y)) return;
         EventBus.emit(EVENTS.OPEN_DETAIL, { item });
         this.scene.launch(SCENE_KEYS.ITEM_DETAIL, { item });
       });
@@ -230,23 +235,35 @@ export class InventoryScene extends Phaser.Scene {
 
   private setupScroll(contentHeight: number): void {
     const { height } = this.scale;
-    if (contentHeight <= height) return;
 
     let startY = 0;
     let startScrollY = 0;
+    const SCROLL_THRESHOLD = 6; // px — меньше этого считается тапом
 
     this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
       startY = ptr.y;
       startScrollY = this.cameras.main.scrollY;
+      this.didScroll = false;
     });
 
     this.input.on('pointermove', (ptr: Phaser.Input.Pointer) => {
       if (!ptr.isDown) return;
+      const delta = ptr.y - startY;
+      if (Math.abs(delta) > SCROLL_THRESHOLD) {
+        this.didScroll = true;
+      }
+      if (contentHeight <= height) return;
       this.cameras.main.scrollY = Phaser.Math.Clamp(
-        startScrollY - (ptr.y - startY),
+        startScrollY - delta,
         0,
         contentHeight - height,
       );
     });
+  }
+
+  /** Зона таб-бара внизу экрана — тапы сюда не должны открывать предметы */
+  private isTabBarArea(ptrY: number): boolean {
+    const s = this.scale.width / 390;
+    return ptrY > this.scale.height - Math.round(64 * s);
   }
 }

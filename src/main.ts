@@ -11,6 +11,7 @@ import { ItemDetailScene } from './scenes/ItemDetailScene';
 import { GiftingScene } from './scenes/GiftingScene';
 import { RevealScene } from './scenes/RevealScene';
 import { FinaleScene } from './scenes/FinaleScene';
+import { HourlyGrantScene } from './scenes/HourlyGrantScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -46,6 +47,7 @@ const config: Phaser.Types.Core.GameConfig = {
     GiftingScene,
     RevealScene,
     FinaleScene,
+    HourlyGrantScene,
   ],
 };
 

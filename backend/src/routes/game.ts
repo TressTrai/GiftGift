@@ -60,6 +60,23 @@ gameRouter.get('/state', (req: Request, res: Response) => {
 
   const isFinale = new Date().getHours() >= 19;
 
+  // Новые предметы из часовой выдачи (ещё не показанные игроку)
+  const newHourlyItems = (
+    db
+      .prepare(
+        `SELECT * FROM inventory
+         WHERE owner_id = ? AND source = 'hourly' AND hourly_notified = 0`,
+      )
+      .all(userId) as InventoryRow[]
+  ).map(rowToInventoryItem);
+
+  if (newHourlyItems.length > 0) {
+    db.prepare(
+      `UPDATE inventory SET hourly_notified = 1
+       WHERE owner_id = ? AND source = 'hourly' AND hourly_notified = 0`,
+    ).run(userId);
+  }
+
   res.json({
     user: { id: user.id, name: user.name, createdAt: user.created_at },
     inventory,
@@ -73,6 +90,7 @@ gameRouter.get('/state', (req: Request, res: Response) => {
     },
     allUsers,
     isFinale,
+    newHourlyItems,
   });
 });
 
@@ -357,6 +375,8 @@ interface InventoryRow {
   is_anonymous: number;
   message: string | null;
   received_at: string;
+  source?: string;
+  hourly_notified?: number;
 }
 
 interface WrappedGiftRow {
