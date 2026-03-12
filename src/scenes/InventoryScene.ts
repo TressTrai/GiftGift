@@ -56,7 +56,7 @@ export class InventoryScene extends Phaser.Scene {
 
   private renderContent(w: number, _h: number, s: number): number {
     let y = Math.round(56 * s);
-    const TAB_BOTTOM = Math.round(64 * s);
+    const TAB_BOTTOM = Math.round(90 * s);
     const sectionGap = Math.round(16 * s);
 
     // ── Тройка целей ───────────────────────────────────────────────────────
@@ -264,6 +264,6 @@ export class InventoryScene extends Phaser.Scene {
   /** Зона таб-бара внизу экрана — тапы сюда не должны открывать предметы */
   private isTabBarArea(ptrY: number): boolean {
     const s = this.scale.width / 390;
-    return ptrY > this.scale.height - Math.round(64 * s);
+    return ptrY > this.scale.height - Math.round(90 * s);
   }
 }

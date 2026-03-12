@@ -41,12 +41,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "L5-mechanics.md",
+                "file": "L0-context.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "L5-mechanics"
+              "title": "L0-context"
             }
           }
         ],
@@ -214,9 +214,9 @@
   },
   "active": "f77a021bdc94bed2",
   "lastOpenFiles": [
+    "L5-mechanics.md",
     "catalog.md",
     "deployment.md",
-    "L5-mechanics.md",
     "L6-presentation.md",
     "Февромарт - Подарки.csv",
     "L6-presentation.md.tmp.14264.1773333385198",

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS, EVENTS, SPAWN_POINTS, SCENE_WIDTH, SCENE_HEIGHT, COLLECTIVE_VISUAL_STEPS } from '../utils/constants';
+import { SCENE_KEYS, EVENTS, SPAWN_POINTS, SCENE_WIDTH, SCENE_HEIGHT, COLLECTIVE_VISUAL_STEPS, PROGRESS_POSITIONS } from '../utils/constants';
 import { EventBus } from '../utils/eventBus';
 import { gameStore } from '../store/GameStore';
 import { collectItem } from '../api/game';
@@ -164,11 +164,12 @@ export class GameScene extends Phaser.Scene {
     );
 
     while (this.progressElements.length < steps) {
-      const idx = this.progressElements.length + 1;
+      const idx = this.progressElements.length;
+      const pos = PROGRESS_POSITIONS[idx];
       const img = this.add.image(
-        Phaser.Math.Between(100, SCENE_WIDTH - 100),
-        Phaser.Math.Between(100, SCENE_HEIGHT - 100),
-        `progress-el-${idx}`,
+        pos.x * SCENE_WIDTH,
+        pos.y * SCENE_HEIGHT,
+        `progress-el-${idx + 1}`,
       ).setAlpha(0);
 
       this.tweens.add({ targets: img, alpha: 1, duration: 600 });

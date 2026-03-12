@@ -34,7 +34,7 @@ export class UIScene extends Phaser.Scene {
 
   private createTabBar(w: number, h: number): void {
     const s = w / 390;
-    const barH = Math.round(64 * s);
+    const barH = Math.round(90 * s);
     const y = h - barH / 2;
 
     // Фон таб-бара

@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS, MESSAGE_MAX_LENGTH, CATALOG_SIZE } from '../utils/constants';
+import { SCENE_KEYS, MESSAGE_MAX_LENGTH, CATALOG_SIZE, EVENTS } from '../utils/constants';
+import { EventBus } from '../utils/eventBus';
 import { gameStore } from '../store/GameStore';
 import { sendGift } from '../api/game';
 import { InventoryItem, User } from '../types';
@@ -37,6 +38,11 @@ export class GiftingScene extends Phaser.Scene {
     const dom = this.add.dom(width / 2, height / 2).createFromHTML(html);
 
     this.populateRecipients(dom, gameStore.allUsers);
+
+    // Закрытие при переключении вкладки
+    const onTabChanged = () => this.scene.stop();
+    EventBus.on(EVENTS.TAB_CHANGED, onTabChanged);
+    this.events.once('shutdown', () => EventBus.off(EVENTS.TAB_CHANGED, onTabChanged));
 
     dom.addListener('click');
     dom.on('click', async (e: MouseEvent) => {
