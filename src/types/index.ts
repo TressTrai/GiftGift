@@ -87,7 +87,7 @@ export interface GameState {
   personalGoal: PersonalGoal;
   collectiveGoal: CollectiveGoal;
   allUsers: User[];           // список всех зарегистрировавшихся (для дарения)
-  isFinale: boolean;          // true после 19:00
+  isFinale: boolean;          // true после 20:00
   /** Предметы из часовой выдачи, ещё не показанные игроку */
   newHourlyItems: InventoryItem[];
 }

@@ -6,12 +6,12 @@ const SPAWN_COUNT = 4;
 const SPAWN_POINTS_COUNT = 12;
 const CATALOG_SIZE = 50;
 
-const GAME_START_HOUR = 10;
-const GAME_END_HOUR = 19;
+const GAME_START_HOUR = 12;
+const GAME_END_HOUR = 20;
 const COLLECTIVE_GOAL_MIN = 300;
 const COLLECTIVE_GOAL_MAX = 1500;
 const COLLECTIVE_GOAL_COEFF = 0.9;
-const GOAL_RECALC_HOURS = [12, 15, 17];
+const GOAL_RECALC_HOURS = [14, 16, 18];
 
 function randomCatalogId(): string {
   const n = Math.floor(Math.random() * CATALOG_SIZE) + 1;

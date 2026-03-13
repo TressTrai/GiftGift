@@ -1,13 +1,13 @@
 import { fetchState } from '../api/game';
 import { gameStore } from '../store/GameStore';
 import { EventBus } from '../utils/eventBus';
-import { EVENTS, GAME_END_HOUR, COLLECTIVE_GOAL_MIN, COLLECTIVE_GOAL_MAX, COLLECTIVE_GOAL_COEFF } from '../utils/constants';
+import { EVENTS, GAME_START_HOUR, GAME_END_HOUR, COLLECTIVE_GOAL_MIN, COLLECTIVE_GOAL_MAX, COLLECTIVE_GOAL_COEFF } from '../utils/constants';
 
 /**
  * SyncSystem — синхронизация с сервером.
  * - Polling при каждом заходе (fetchState)
- * - Проверка финала в 19:00
- * - Адаптивный пересчёт коллективной цели (12:00, 15:00, 17:00)
+ * - Проверка финала в 20:00
+ * - Адаптивный пересчёт коллективной цели (14:00, 16:00, 18:00)
  */
 export class SyncSystem {
   private pollTimer?: ReturnType<typeof setInterval>;
@@ -51,7 +51,7 @@ export class SyncSystem {
 
   /**
    * Пересчёт адаптивной коллективной цели.
-   * Вызывается сервером в 12:00, 15:00, 17:00.
+   * Вызывается сервером в 14:00, 16:00, 18:00.
    * Оставлен здесь для документации логики.
    */
   static calculateAdaptiveGoal(
@@ -61,7 +61,7 @@ export class SyncSystem {
     if (elapsedHours <= 0) return COLLECTIVE_GOAL_MIN;
 
     const ratePerHour = giftedSoFar / elapsedHours;
-    const totalGameHours = GAME_END_HOUR - 10; // 9 часов
+    const totalGameHours = GAME_END_HOUR - GAME_START_HOUR; // 8 часов
     const projected = ratePerHour * totalGameHours;
     const goal = Math.round(projected * COLLECTIVE_GOAL_COEFF);
 

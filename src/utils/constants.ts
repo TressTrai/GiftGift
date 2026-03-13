@@ -1,8 +1,8 @@
 // ─── Игровое время ───────────────────────────────────────────────────────────
 
-export const GAME_START_HOUR = 10;          // 10:00
-export const GAME_END_HOUR = 19;            // 19:00
-export const GOAL_RECALC_HOURS = [12, 15, 17]; // пересчёт адаптивной цели
+export const GAME_START_HOUR = 12;          // 12:00
+export const GAME_END_HOUR = 20;            // 20:00
+export const GOAL_RECALC_HOURS = [14, 16, 18]; // пересчёт адаптивной цели
 
 // ─── Сцена ───────────────────────────────────────────────────────────────────
 

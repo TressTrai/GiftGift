@@ -58,7 +58,7 @@ gameRouter.get('/state', (req: Request, res: Response) => {
     db.prepare('SELECT id, name, created_at FROM users').all() as UserRow[]
   ).map(u => ({ id: u.id, name: u.name, createdAt: u.created_at }));
 
-  const isFinale = new Date().getHours() >= 19;
+  const isFinale = new Date().getHours() >= 20;
 
   // Новые предметы из часовой выдачи (ещё не показанные игроку)
   const newHourlyItems = (
