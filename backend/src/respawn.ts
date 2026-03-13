@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { db } from './db';
 
-const SPAWN_INTERVAL_MS = 10 * 60 * 1000; // 10 минут
+const SPAWN_INTERVAL_MS = 3 * 60 * 1000; // 10 минут
 const SPAWN_COUNT = 4;
 const SPAWN_POINTS_COUNT = 12;
 const CATALOG_SIZE = 50;
