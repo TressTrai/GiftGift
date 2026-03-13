@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS } from '../utils/constants';
+import { SCENE_KEYS, COLORS, CSS, FONT, FS } from '../utils/constants';
 import { getToken, clearToken, isTutorialSeen } from '../utils/storage';
 import { CatalogEntry } from '../types';
 import { gameStore } from '../store/GameStore';
@@ -76,14 +76,18 @@ export class BootScene extends Phaser.Scene {
     const barH  = Math.round(20 * s);
     const fillH = Math.round(16 * s);
 
-    const barBg = this.add.rectangle(width / 2, height / 2, barW, barH, 0x333333);
-    const bar = this.add.rectangle(width / 2 - barW / 2, height / 2, 0, fillH, 0xffb347);
+    // Фон экрана загрузки
+    this.add.rectangle(0, 0, width, height, COLORS.BG).setOrigin(0);
+
+    const barBg = this.add.rectangle(width / 2, height / 2, barW, barH, 0xe8d0b8);
+    const bar = this.add.rectangle(width / 2 - barW / 2, height / 2, 0, fillH, 0xebb838);
     bar.setOrigin(0, 0.5);
 
     const text = this.add
       .text(width / 2, height / 2 + Math.round(40 * s), 'Загрузка...', {
-        fontSize: `${Math.round(16 * s)}px`,
-        color: '#aaaaaa',
+        fontFamily: FONT.BODY,
+        fontSize: `${Math.round(FS.MD * s)}px`,
+        color: CSS.TEXT_DIM,
       })
       .setOrigin(0.5);
 

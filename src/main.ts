@@ -16,7 +16,7 @@ import { HourlyGrantScene } from './scenes/HourlyGrantScene';
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'game',
-  backgroundColor: '#1a1a2e',
+  backgroundColor: '#fdf0e4',
 
   scale: {
     mode: Phaser.Scale.FIT,

@@ -1,12 +1,7 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS, COLORS } from '../utils/constants';
+import { SCENE_KEYS, COLORS, CSS, FONT, FS } from '../utils/constants';
 import { markTutorialSeen } from '../utils/storage';
 
-/**
- * TutorialScene — 2-экранный онбординг (показывается только при первом заходе).
- * Свайп или кнопка для перехода между экранами.
- * Кнопка "Начать играть" на втором экране.
- */
 export class TutorialScene extends Phaser.Scene {
   private page = 0;
   private pages!: Phaser.GameObjects.Container[];
@@ -25,48 +20,39 @@ export class TutorialScene extends Phaser.Scene {
       this.createPage1(width, height, s),
       this.createPage2(width, height, s),
     ];
-
-    // Показываем только первую страницу
     this.pages[1].setVisible(false);
 
-    // Индикаторы страниц
-    const dotR  = Math.round(5 * s);
+    const dotR   = Math.round(5 * s);
     const dotOff = Math.round(12 * s);
-    const dot1 = this.add.circle(width / 2 - dotOff, height * 0.88, dotR, COLORS.ACCENT_WARM);
-    const dot2 = this.add.circle(width / 2 + dotOff, height * 0.88, dotR, 0x444444);
+    const dot1 = this.add.circle(width / 2 - dotOff, height * 0.88, dotR, COLORS.ACCENT_AMBER);
+    const dot2 = this.add.circle(width / 2 + dotOff, height * 0.88, dotR, COLORS.ITEM_BORDER);
 
-    // Кнопка "Далее"
     const nextBtn = this.add
       .text(width / 2, height * 0.94, 'Далее →', {
-        fontSize: `${Math.round(18 * s)}px`,
-        color: '#ffb347',
+        fontFamily: FONT.BODY,
+        fontSize: `${Math.round(FS.LG * s)}px`,
+        color: CSS.ACCENT_AMBER,
+        fontStyle: 'bold',
       })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
 
+    const goToPage2 = () => {
+      this.pages[0].setVisible(false);
+      this.pages[1].setVisible(true);
+      dot1.setFillStyle(COLORS.ITEM_BORDER);
+      dot2.setFillStyle(COLORS.ACCENT_AMBER);
+      nextBtn.setText('Начать играть');
+      this.page = 1;
+    };
+
     nextBtn.on('pointerup', () => {
-      if (this.page === 0) {
-        this.pages[0].setVisible(false);
-        this.pages[1].setVisible(true);
-        dot1.setFillStyle(0x444444);
-        dot2.setFillStyle(COLORS.ACCENT_WARM);
-        nextBtn.setText('Начать играть');
-        this.page = 1;
-      } else {
-        this.startGame();
-      }
+      if (this.page === 0) goToPage2();
+      else this.startGame();
     });
 
-    // Свайп поддержка
     this.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
-      if (Math.abs(ptr.downX - ptr.upX) > 50 && this.page === 0) {
-        this.pages[0].setVisible(false);
-        this.pages[1].setVisible(true);
-        dot1.setFillStyle(0x444444);
-        dot2.setFillStyle(COLORS.ACCENT_WARM);
-        nextBtn.setText('Начать играть');
-        this.page = 1;
-      }
+      if (Math.abs(ptr.downX - ptr.upX) > 50 && this.page === 0) goToPage2();
     });
   }
 
@@ -74,27 +60,33 @@ export class TutorialScene extends Phaser.Scene {
     const items: Phaser.GameObjects.GameObject[] = [];
 
     items.push(
-      this.add.text(w / 2, h * 0.10, 'Как играть', {
-        fontSize: `${Math.round(24 * s)}px`,
+      this.add.text(w / 2, h * 0.09, 'Как играть', {
+        fontFamily: FONT.TITLE,
+        fontSize: `${Math.round(FS.XL * s)}px`,
         fontStyle: 'bold',
-        color: '#ffffff',
+        color: CSS.TEXT,
       }).setOrigin(0.5),
     );
 
     const steps = [
-      { icon: '🗺', text: 'Собирай предметы на сцене' },
+      { icon: '🌍', text: 'Собирай предметы на сцене' },
       { icon: '🎁', text: 'Раскрывай подарки от коллег' },
       { icon: '🤝', text: 'Дари другим' },
       { icon: '✨', text: 'Вместе украшаем праздник!' },
     ];
 
     steps.forEach((step, i) => {
-      const y = h * (0.25 + i * 0.14);
+      const y = h * (0.22 + i * 0.15);
       items.push(
-        this.add.text(w * 0.15, y, step.icon, { fontSize: `${Math.round(28 * s)}px` }),
-        this.add.text(w * 0.28, y, step.text, {
-          fontSize: `${Math.round(16 * s)}px`,
-          color: '#ffffff',
+        this.add.text(w * 0.12, y, step.icon, {
+          fontSize: `${Math.round(20 * s)}px`,
+          padding: { x: Math.round(4 * s), y: Math.round(4 * s) },
+        }).setOrigin(0.5),
+        this.add.text(w * 0.24, y, step.text, {
+          fontFamily: FONT.BODY,
+          fontSize: `${Math.round(FS.SM * s)}px`,
+          color: CSS.TEXT,
+          wordWrap: { width: w * 0.68 },
         }).setOrigin(0, 0.5),
       );
     });
@@ -106,10 +98,11 @@ export class TutorialScene extends Phaser.Scene {
     const items: Phaser.GameObjects.GameObject[] = [];
 
     items.push(
-      this.add.text(w / 2, h * 0.10, 'Подробнее', {
-        fontSize: `${Math.round(24 * s)}px`,
+      this.add.text(w / 2, h * 0.09, 'Подробнее', {
+        fontFamily: FONT.TITLE,
+        fontSize: `${Math.round(FS.XL * s)}px`,
         fontStyle: 'bold',
-        color: '#ffffff',
+        color: CSS.TEXT,
       }).setOrigin(0.5),
     );
 
@@ -119,13 +112,18 @@ export class TutorialScene extends Phaser.Scene {
     ];
 
     details.forEach((d, i) => {
-      const y = h * (0.28 + i * 0.22);
+      const y = h * (0.26 + i * 0.26);
       items.push(
-        this.add.text(w * 0.12, y, d.icon, { fontSize: `${Math.round(32 * s)}px` }),
-        this.add.text(w * 0.26, y, d.text, {
-          fontSize: `${Math.round(15 * s)}px`,
-          color: '#ffffff',
+        this.add.text(w * 0.12, y, d.icon, {
+          fontSize: `${Math.round(20 * s)}px`,
+          padding: { x: Math.round(4 * s), y: Math.round(4 * s) },
+        }).setOrigin(0.5),
+        this.add.text(w * 0.24, y, d.text, {
+          fontFamily: FONT.BODY,
+          fontSize: `${Math.round(FS.SM * s)}px`,
+          color: CSS.TEXT,
           lineSpacing: 6,
+          wordWrap: { width: w * 0.68 },
         }).setOrigin(0, 0.5),
       );
     });
@@ -135,11 +133,10 @@ export class TutorialScene extends Phaser.Scene {
 
   private startGame(): void {
     markTutorialSeen();
-    // Останавливаем вторичные сцены на случай если остались
     [SCENE_KEYS.PROFILE, SCENE_KEYS.INVENTORY, SCENE_KEYS.UI].forEach(key => {
       if (this.scene.isActive(key)) this.scene.stop(key);
     });
-    this.scene.start(SCENE_KEYS.GAME);   // останавливает Tutorial, запускает Game
-    this.scene.launch(SCENE_KEYS.UI);    // запускает UI свежим поверх Game
+    this.scene.start(SCENE_KEYS.GAME);
+    this.scene.launch(SCENE_KEYS.UI);
   }
 }

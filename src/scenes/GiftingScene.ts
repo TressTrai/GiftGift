@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS, MESSAGE_MAX_LENGTH, EVENTS } from '../utils/constants';
+import { SCENE_KEYS, COLORS, CSS, FONT, FS, RADIUS, MESSAGE_MAX_LENGTH, EVENTS } from '../utils/constants';
 import { EventBus } from '../utils/eventBus';
 import { gameStore } from '../store/GameStore';
 import { sendGift } from '../api/game';
@@ -9,10 +9,6 @@ interface GiftingData {
   item: InventoryItem;
 }
 
-/**
- * GiftingScene — модальный экран дарения.
- * Шаги: выбор получателя → превью трансформации → сообщение → анонимность → подтверждение.
- */
 export class GiftingScene extends Phaser.Scene {
   private selectedUser: User | null = null;
   private isAnonymous = false;
@@ -25,19 +21,15 @@ export class GiftingScene extends Phaser.Scene {
   create(data: GiftingData): void {
     const { width, height } = this.scale;
     const { item } = data;
-
-    // resultCatalogId фиксируется на сервере в момент получения предмета
     const resultCatalogId = item.resultCatalogId ?? item.catalogId;
 
-    this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0).setInteractive();
+    this.add.rectangle(0, 0, width, height, 0x000000, 0.55).setOrigin(0).setInteractive();
 
-    // Используем DOM для сложного UI формы
     const html = this.buildFormHTML(item, resultCatalogId, width, height);
     const dom = this.add.dom(width / 2, height / 2).createFromHTML(html);
 
     this.populateRecipients(dom, gameStore.allUsers);
 
-    // Закрытие при переключении вкладки
     const onTabChanged = () => this.scene.stop();
     EventBus.on(EVENTS.TAB_CHANGED, onTabChanged);
     this.events.once('shutdown', () => EventBus.off(EVENTS.TAB_CHANGED, onTabChanged));
@@ -49,11 +41,13 @@ export class GiftingScene extends Phaser.Scene {
       if (target.dataset['userId']) {
         const userId = target.dataset['userId'];
         this.selectedUser = gameStore.allUsers.find(u => u.id === userId) ?? null;
-        dom.getChildByID('sendBtn')?.removeAttribute('disabled');
+        const sendBtn = dom.getChildByID('sendBtn') as HTMLButtonElement;
+        sendBtn.removeAttribute('disabled');
+        sendBtn.style.opacity = '1';
         (dom.getChildByID('recipientList') as HTMLElement)
           .querySelectorAll('.recipient-item')
           .forEach(el => (el as HTMLElement).style.background = '');
-        target.style.background = '#2a2a60';
+        target.style.background = `${CSS.ACCENT_AMBER}30`;
       }
 
       if (target.id === 'cancelBtn') { this.scene.stop(); return; }
@@ -83,6 +77,7 @@ export class GiftingScene extends Phaser.Scene {
         } catch {
           (target as HTMLButtonElement).textContent = 'Подарить';
           target.removeAttribute('disabled');
+          (target as HTMLElement).style.opacity = '1';
         }
       }
     });
@@ -92,16 +87,17 @@ export class GiftingScene extends Phaser.Scene {
     const s = width / 390;
     const containerW = width - Math.round(48 * s);
     const pad    = Math.round(20 * s);
-    const radius = Math.round(14 * s);
-    const fnt16  = Math.round(16 * s);
-    const fnt15  = Math.round(15 * s);
-    const fnt14  = Math.round(14 * s);
-    const fnt13  = Math.round(13 * s);
-    const fnt11  = Math.round(11 * s);
+    const radius = Math.round(RADIUS.LG * s);
+    const fLG    = Math.round(FS.LG * s);
+    const fMD    = Math.round(FS.MD * s);
+    const fSM    = Math.round(FS.SM * s);
+    const fXS    = Math.round(FS.XS * s);
     const gap8   = Math.round(8 * s);
     const gap12  = Math.round(12 * s);
-    const chkSz  = Math.round(18 * s);
-    const btnPad = Math.round(12 * s);
+    const chkSz  = Math.round(20 * s);
+    const btnPad = Math.round(13 * s);
+    const inpR   = Math.round(RADIUS.SM * s);
+    const ff     = 'Nunito,sans-serif';
 
     const itemEntry = gameStore.getCatalogEntry(item.catalogId);
     const itemName = itemEntry?.name ?? item.catalogId;
@@ -110,61 +106,65 @@ export class GiftingScene extends Phaser.Scene {
       ? (() => {
           const resultEntry = gameStore.getCatalogEntry(resultCatalogId);
           const resultName = resultEntry?.name ?? resultCatalogId;
-          return `<p style="color:#ffb347;font-size:${fnt13}px;margin:${gap8}px 0;text-align:center">
+          return `<p style="color:${CSS.ACCENT_AMBER};font-size:${fSM}px;margin:${gap8}px 0;
+                             text-align:center;font-family:${ff}">
                     → Получатель получит: <strong>${resultName}</strong>
                   </p>`;
         })()
       : '';
 
     return `
-      <div style="background:#1a1a36;border-radius:${radius}px;padding:${pad}px;
-                  width:${containerW}px;height:${Math.round(height * 0.68)}px;overflow-y:auto">
-        <p style="color:#fff;font-size:${fnt16}px;font-weight:bold;margin-bottom:${gap8}px">Ты даришь:</p>
-        <div style="background:#222244;border-radius:${gap8}px;padding:${gap12}px;
-                    margin-bottom:${gap8}px;display:flex;align-items:center;gap:${gap12}px">
-          <span style="font-size:${fnt14}px;color:#fff">${itemName}</span>
+      <div style="background:${CSS.BG_CARD};border-radius:${radius}px;padding:${pad}px;
+                  width:${containerW}px;height:${Math.round(height * 0.72)}px;overflow-y:auto;
+                  box-shadow:0 4px 32px rgba(61,43,31,0.18);font-family:${ff}">
+        <p style="color:${CSS.TEXT};font-size:${fLG}px;font-weight:700;margin-bottom:${gap8}px">Ты даришь:</p>
+        <div style="background:${CSS.BG_INPUT};border-radius:${inpR}px;padding:${gap12}px;
+                    margin-bottom:${gap8}px;border:1.5px solid ${CSS.DIVIDER}">
+          <span style="font-size:${fMD}px;color:${CSS.TEXT}">${itemName}</span>
         </div>
         ${transformPreview}
 
-        <p style="color:#aaa;font-size:${fnt13}px;margin:${gap12}px 0 ${gap8}px">
+        <p style="color:${CSS.TEXT_DIM};font-size:${fSM}px;margin:${gap12}px 0 ${gap8}px">
           Выбери получателя:
         </p>
         <div id="recipientList"
-             style="background:#222244;border-radius:${gap8}px;
-                    max-height:${Math.round(260 * s)}px;overflow-y:auto">
+             style="background:${CSS.BG_INPUT};border-radius:${inpR}px;border:1.5px solid ${CSS.DIVIDER};
+                    max-height:${Math.round(210 * s)}px;overflow-y:auto">
         </div>
 
-        <p style="color:#aaa;font-size:${fnt13}px;margin:${gap12}px 0 ${gap8}px">
+        <p style="color:${CSS.TEXT_DIM};font-size:${fSM}px;margin:${gap12}px 0 ${gap8}px">
           Сообщение (необязательно):
         </p>
         <div style="position:relative">
           <input id="msgInput" type="text" maxlength="${MESSAGE_MAX_LENGTH}"
             placeholder="Напиши что-нибудь..."
-            style="width:100%;padding:${Math.round(10*s)}px;border-radius:${Math.round(6*s)}px;
-                   border:none;font-size:${fnt14}px;background:#222244;color:#fff;
-                   box-sizing:border-box" />
+            style="width:100%;padding:${Math.round(11*s)}px;border-radius:${inpR}px;
+                   border:1.5px solid ${CSS.DIVIDER};font-size:${fMD}px;font-family:${ff};
+                   background:${CSS.BG_INPUT};color:${CSS.TEXT};
+                   box-sizing:border-box;outline:none" />
           <span id="msgCount"
-                style="position:absolute;right:${gap8}px;bottom:${Math.round(10*s)}px;
-                       font-size:${fnt11}px;color:#666">0/${MESSAGE_MAX_LENGTH}</span>
+                style="position:absolute;right:${gap8}px;bottom:${Math.round(11*s)}px;
+                       font-size:${fXS}px;color:${CSS.TEXT_DIM};font-family:${ff}">0/${MESSAGE_MAX_LENGTH}</span>
         </div>
 
         <label style="display:flex;align-items:center;gap:${gap8}px;margin:${gap12}px 0;
-                      color:#fff;font-size:${fnt14}px;cursor:pointer">
+                      color:${CSS.TEXT};font-size:${fMD}px;cursor:pointer">
           <input id="anonCheck" type="checkbox"
-                 style="width:${chkSz}px;height:${chkSz}px;cursor:pointer" />
+                 style="width:${chkSz}px;height:${chkSz}px;cursor:pointer;accent-color:${CSS.ACCENT_CORAL}" />
           Анонимно?
         </label>
 
         <div style="display:flex;gap:${gap8}px;margin-top:${Math.round(4*s)}px">
           <button id="sendBtn" disabled
-            style="flex:1;background:#7b68ee;color:#fff;border:none;padding:${btnPad}px;
-                   border-radius:${gap8}px;font-size:${fnt16}px;cursor:pointer;opacity:0.5">
+            style="flex:1;background:${CSS.BUTTON_PRIMARY};color:${CSS.TEXT_LIGHT};border:none;
+                   padding:${btnPad}px;border-radius:${inpR}px;font-size:${fLG}px;font-family:${ff};
+                   cursor:pointer;opacity:0.5;font-weight:700">
             Подарить
           </button>
           <button id="cancelBtn"
-            style="background:#333;color:#aaa;border:none;
-                   padding:${btnPad}px ${Math.round(20*s)}px;
-                   border-radius:${gap8}px;font-size:${fnt15}px;cursor:pointer">
+            style="background:${CSS.DIVIDER};color:${CSS.TEXT};border:none;
+                   padding:${btnPad}px ${Math.round(22*s)}px;
+                   border-radius:${inpR}px;font-size:${fMD}px;font-family:${ff};cursor:pointer">
             Отмена
           </button>
         </div>
@@ -172,15 +172,11 @@ export class GiftingScene extends Phaser.Scene {
     `;
   }
 
-  private populateRecipients(
-    dom: Phaser.GameObjects.DOMElement,
-    users: User[],
-  ): void {
+  private populateRecipients(dom: Phaser.GameObjects.DOMElement, users: User[]): void {
     const s = this.scale.width / 390;
     const list = dom.getChildByID('recipientList') as HTMLElement;
     const myId = gameStore.user.id;
 
-    // Случайный порядок (из L6)
     const shuffled = [...users.filter(u => u.id !== myId)]
       .sort(() => Math.random() - 0.5);
 
@@ -189,16 +185,15 @@ export class GiftingScene extends Phaser.Scene {
       div.className = 'recipient-item';
       div.dataset['userId'] = u.id;
       div.style.cssText =
-        `padding:${Math.round(10*s)}px ${Math.round(14*s)}px;cursor:pointer;color:#fff;` +
-        `font-size:${Math.round(15*s)}px;border-bottom:1px solid #333355;transition:background 0.15s`;
+        `padding:${Math.round(11*s)}px ${Math.round(14*s)}px;cursor:pointer;color:${CSS.TEXT};` +
+        `font-size:${Math.round(FS.MD * s)}px;font-family:Nunito,sans-serif;` +
+        `border-bottom:1px solid ${CSS.DIVIDER};transition:background 0.15s`;
       div.textContent = u.name;
       list.appendChild(div);
     });
 
-    // Счётчик символов сообщения
     const msgInput = dom.getChildByID('msgInput') as HTMLInputElement;
     const msgCount = dom.getChildByID('msgCount') as HTMLElement;
-
     msgInput.addEventListener('input', () => {
       msgCount.textContent = `${msgInput.value.length}/${MESSAGE_MAX_LENGTH}`;
     });
@@ -206,18 +201,26 @@ export class GiftingScene extends Phaser.Scene {
 
   private showSuccessFeedback(w: number, h: number): void {
     const s = w / 390;
-    const txt = this.add
+    const r = Math.round(RADIUS.MD * s);
+    const txtW = Math.round(270 * s);
+    const txtH = Math.round(88 * s);
+
+    const gfx = this.add.graphics();
+    gfx.fillStyle(COLORS.BG_CARD);
+    gfx.fillRoundedRect(w / 2 - txtW / 2, h / 2 - txtH / 2, txtW, txtH, r);
+
+    this.add
       .text(w / 2, h / 2, 'Подарок отправлен!\nКоллега будет рад', {
-        fontSize: `${Math.round(20 * s)}px`,
-        color: '#4caf50',
+        fontFamily: FONT.BODY,
+        fontSize: `${Math.round(FS.LG * s)}px`,
+        color: CSS.SUCCESS,
+        fontStyle: 'bold',
         align: 'center',
-        backgroundColor: '#000000cc',
-        padding: { x: Math.round(20 * s), y: Math.round(16 * s) },
       })
       .setOrigin(0.5);
 
     this.time.delayedCall(1500, () => {
-      txt.destroy();
+      gfx.destroy();
       this.scene.stop();
     });
   }

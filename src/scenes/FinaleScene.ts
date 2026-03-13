@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS, COLORS } from '../utils/constants';
+import { SCENE_KEYS, COLORS, CSS, FONT, FS } from '../utils/constants';
 
 /**
  * FinaleScene — кульминационное событие в 19:00.
@@ -25,9 +25,10 @@ export class FinaleScene extends Phaser.Scene {
     // Главный текст
     const mainText = this.add
       .text(cx, height * 0.35, 'Мы вместе\nукрасили праздник!', {
-        fontSize: `${Math.round(28 * s)}px`,
+        fontFamily: FONT.TITLE,
+        fontSize: `${Math.round(FS.XXL * s)}px`,
         fontStyle: 'bold',
-        color: '#ffb347',
+        color: CSS.ACCENT_AMBER,
         align: 'center',
         lineSpacing: Math.round(8 * s),
       })
@@ -39,8 +40,9 @@ export class FinaleScene extends Phaser.Scene {
     // Количество подарков
     const subText = this.add
       .text(cx, height * 0.52, 'Спасибо всем участникам!', {
-        fontSize: `${Math.round(16 * s)}px`,
-        color: '#aaaaaa',
+        fontFamily: FONT.BODY,
+        fontSize: `${Math.round(FS.MD * s)}px`,
+        color: '#cccccc',
       })
       .setOrigin(0.5)
       .setAlpha(0);
@@ -59,8 +61,10 @@ export class FinaleScene extends Phaser.Scene {
 
       const btnText = this.add
         .text(cx, height * 0.70, 'Посмотреть итог', {
-          fontSize: `${Math.round(16 * s)}px`,
-          color: '#fff',
+          fontFamily: FONT.BODY,
+          fontSize: `${Math.round(FS.MD * s)}px`,
+          color: CSS.TEXT_LIGHT,
+          fontStyle: 'bold',
         })
         .setOrigin(0.5)
         .setAlpha(0);
@@ -73,10 +77,10 @@ export class FinaleScene extends Phaser.Scene {
 
   private createFireworks(w: number, h: number, s: number): void {
     const colors = [
-      COLORS.ACCENT_WARM,
+      COLORS.ACCENT_AMBER,
       COLORS.ACCENT_PINK,
-      COLORS.ACCENT_BLUE,
-      COLORS.SUCCESS,
+      COLORS.ACCENT_TEAL,
+      COLORS.ACCENT_OLIVE,
       0xffffff,
     ];
 

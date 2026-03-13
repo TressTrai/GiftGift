@@ -120,18 +120,102 @@ export const EVENTS = {
 } as const;
 
 // ─── Цвета ───────────────────────────────────────────────────────────────────
+// Палитра взята из цветов сцены (f7a590 ebb838 93a25d d5d4b5 59a9b0)
+// и иконок (b1d2e2 e9876d f9ebd0). Всё централизовано здесь.
 
 export const COLORS = {
-  BG: 0x697f6a,
-  PRIMARY: 0x697f6a,          // фиолетово-голубой
-  ACCENT_WARM: 0xffb347,      // жёлтый/золотой
-  ACCENT_PINK: 0xff69b4,      // розовый
-  ACCENT_BLUE: 0x87ceeb,      // голубой
-  ITEM_BORDER: 0x888888,      // серая рамка (предмет)
-  GIFT_BORDER: 0xffd700,      // золотая рамка (подарок)
-  TEXT: 0xffffff,
-  TEXT_DIM: 0xaaaaaa,
-  SUCCESS: 0x4caf50,
+  // Фоны
+  BG:           0xfdf0e4,  // тёплый крем (из f9ebd0 иконок)
+  BG_CARD:      0xfff8ef,  // карточки — чуть светлее
+  BG_CARD_ALT:  0xeef6f7,  // карточки голубоватые (из b1d2e2)
+  BG_INPUT:     0xfdf0e4,  // поля ввода
+
+  // Акценты из сцены и иконок
+  ACCENT_AMBER: 0xebb838,  // янтарный (сцена)
+  ACCENT_CORAL: 0xe9876d,  // коралловый (иконки)
+  ACCENT_TEAL:  0x59a9b0,  // бирюзовый (сцена)
+  ACCENT_OLIVE: 0x93a25d,  // оливковый (сцена)
+  ACCENT_BEIGE: 0xd5d4b5,  // бежевый (сцена)
+  ACCENT_PINK:  0xdb9ccf,  // сиреневый (предметы)
+
+  // Текст
+  TEXT:         0x3d2b1f,  // тёмно-коричневый (на светлом фоне)
+  TEXT_DIM:     0x8a7060,  // приглушённый коричневый
+  TEXT_LIGHT:   0xfdf0e4,  // светлый текст (на тёмных элементах)
+
+  // Кнопки
+  BUTTON_PRIMARY:   0xe9876d,  // коралловый — основная кнопка
+  BUTTON_HOVER:     0xf5a48a,  // светлее — ховер
+  BUTTON_SECONDARY: 0xd5d4b5,  // бежевый — вторичная
+
+  // Рамки и разделители
+  ITEM_BORDER:  0xd5d4b5,  // бежевая рамка предмета
+  GIFT_BORDER:  0xebb838,  // янтарная рамка подарка
+  DIVIDER:      0xe8d0b8,  // тёплый разделитель
+
+  // Статусы
+  SUCCESS:      0x93a25d,  // оливковый
+  ERROR:        0xe9876d,  // коралловый
+  BADGE:        0xe9876d,  // коралловый бейдж
+
+  // Алиасы для обратной совместимости
+  PRIMARY:      0xe9876d,
+  ACCENT_WARM:  0xebb838,
+  ACCENT_BLUE:  0x59a9b0,
+} as const;
+
+/** CSS-строки, точно соответствующие значениям COLORS.
+ *  Используй для: Phaser text color, DOM-элементов (inputs, кнопки). */
+export const CSS = {
+  BG:           '#fdf0e4',
+  BG_CARD:      '#fff8ef',
+  BG_CARD_ALT:  '#eef6f7',
+  BG_INPUT:     '#fdf0e4',
+  BG_DARK:      '#2a1a10',
+
+  ACCENT_AMBER: '#ebb838',
+  ACCENT_CORAL: '#e9876d',
+  ACCENT_TEAL:  '#59a9b0',
+  ACCENT_OLIVE: '#93a25d',
+  ACCENT_BEIGE: '#d5d4b5',
+  ACCENT_PINK:  '#db9ccf',
+
+  TEXT:         '#3d2b1f',
+  TEXT_DIM:     '#8a7060',
+  TEXT_LIGHT:   '#fdf0e4',
+
+  BUTTON_PRIMARY:   '#e9876d',
+  BUTTON_SECONDARY: '#d5d4b5',
+  DIVIDER:          '#e8d0b8',
+
+  SUCCESS:      '#93a25d',
+  ERROR:        '#e9876d',
+} as const;
+
+/** Базовые радиусы скругления (px при width=390).
+ *  В коде умножай на коэффициент s = width/390. */
+export const RADIUS = {
+  SM:  6,   // мелкие элементы, инпуты
+  MD:  10,  // карточки, кнопки
+  LG:  16,  // модальные панели
+} as const;
+
+/** Шрифты. TITLE — Comfortaa (заголовки), BODY — Nunito (основной текст). */
+export const FONT = {
+  TITLE: '"Comfortaa", "Nunito", sans-serif',
+  BODY:  '"Nunito", sans-serif',
+} as const;
+
+/** Базовые размеры шрифта (px при width=390).
+ *  В коде: fontSize: `${Math.round(FS.MD * s)}px` */
+export const FS = {
+  XS:   13,  // подписи к карточкам, мелкие метки
+  SM:   16,  // подзаголовки, счётчики
+  MD:   19,  // основной текст, кнопки
+  LG:   22,  // крупный текст, лейблы форм
+  XL:   26,  // заголовки экранов
+  XXL:  31,  // крупные заголовки
+  XXXL: 38,  // главный заголовок (Февромарт)
 } as const;
 
 // ─── Ключи хранилища ─────────────────────────────────────────────────────────
