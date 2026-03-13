@@ -77,7 +77,7 @@ function recalculateGoal(): void {
   console.log(`[goal] Recalculated target: ${newTarget} (gifted so far: ${goal.current})`);
 }
 
-const HOURLY_GRANT_INTERVAL_MS = 1 * 60 * 1000; // 1 час
+const HOURLY_GRANT_INTERVAL_MS = 60 * 60 * 1000; // 1 час
 
 /** Выдаёт каждому зарегистрированному пользователю 1 предмет в инвентарь */
 export function runHourlyGrant(): void {

@@ -122,8 +122,8 @@ export const EVENTS = {
 // ─── Цвета ───────────────────────────────────────────────────────────────────
 
 export const COLORS = {
-  BG: 0x1a1a2e,
-  PRIMARY: 0x7b68ee,          // фиолетово-голубой
+  BG: 0x697f6a,
+  PRIMARY: 0x697f6a,          // фиолетово-голубой
   ACCENT_WARM: 0xffb347,      // жёлтый/золотой
   ACCENT_PINK: 0xff69b4,      // розовый
   ACCENT_BLUE: 0x87ceeb,      // голубой
